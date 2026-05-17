@@ -8,7 +8,8 @@
         'website_sale',
         'sale_management',
         'portal',
-        'mail',          # required for mail.thread on mlm.commission
+        'mail',
+        'auth_signup',   # required: hook into signup to auto-link downline
     ],
     'data': [
         'security/ir.model.access.csv',

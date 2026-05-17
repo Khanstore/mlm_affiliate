@@ -117,7 +117,7 @@ class ResPartner(models.Model):
                 partner.referral_code = partner._generate_referral_code()
                 partner.is_affiliate = True
 
-    def action_view_commissions(self):
+    def action_view_mlm_commissions(self):
         return {
             'type': 'ir.actions.act_window',
             'name': 'Commissions',

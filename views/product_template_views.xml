@@ -9,19 +9,12 @@
         <field name="arch" type="xml">
             <xpath expr="//notebook" position="inside">
                 <page string="Commission Rules" name="mlm_commission">
-
-                    <!--
-                        invisible="commission_rule_ids" means:
-                          hide the alert when the field is non-empty (has rules).
-                        So the alert is VISIBLE only when the list is empty.
-                    -->
                     <div class="alert alert-info mb-3" role="alert"
                          invisible="commission_rule_ids">
                         <strong>No commission rules yet.</strong>
                         Add one row per MLM level below.
                         Level 1 = direct referrer · Level 2 = their upline · etc.
                     </div>
-
                     <field name="commission_rule_ids">
                         <list editable="bottom">
                             <field name="level"/>
@@ -31,7 +24,6 @@
                             <field name="active"/>
                         </list>
                     </field>
-
                     <p class="text-muted mt-2 mb-0">
                         <em>
                             Percentage: calculated on the order line subtotal
@@ -44,16 +36,21 @@
         </field>
     </record>
 
-    <!-- ── Referrer field + smart button on Sale Order form ──────────── -->
+    <!-- ── Sale Order: smart button + dedicated Affiliate tab ────────── -->
+    <!--
+        We add our OWN tab to the sale order notebook instead of trying to
+        inject into an existing page. This avoids any dependency on Odoo 18's
+        internal page names (which changed between versions).
+    -->
     <record id="view_sale_order_referrer" model="ir.ui.view">
         <field name="name">sale.order.referrer</field>
         <field name="model">sale.order</field>
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
 
-            <!-- Smart button (only visible when commissions exist) -->
+            <!-- Smart button in the button_box -->
             <xpath expr="//div[@name='button_box']" position="inside">
-                <button name="action_view_commissions"
+                <button name="action_view_mlm_commissions"
                         type="object"
                         class="oe_stat_button"
                         icon="fa-money"
@@ -67,20 +64,20 @@
                 </button>
             </xpath>
 
-            <!--
-                Inject referrer fields into the Other Info tab.
-                We add a dedicated group so it never depends on the
-                internal structure of an existing group.
-            -->
-            <xpath expr="//page[@name='other_info']" position="inside">
-                <group string="Affiliate Referral" name="affiliate_referral">
-                    <field name="referrer_partner_id"/>
-                    <field name="referral_code_used"
-                           invisible="not referral_code_used"/>
-                    <field name="total_commission_amount"
-                           string="Total Commissions"
-                           invisible="commission_count == 0"/>
-                </group>
+            <!-- New dedicated tab — no dependency on any existing page name -->
+            <xpath expr="//notebook" position="inside">
+                <page string="Affiliate Referral"
+                      name="mlm_affiliate_referral"
+                      invisible="not referrer_partner_id and commission_count == 0">
+                    <group string="Referral Info">
+                        <field name="referrer_partner_id"/>
+                        <field name="referral_code_used"
+                               invisible="not referral_code_used"/>
+                        <field name="total_commission_amount"
+                               string="Total Commissions"
+                               invisible="commission_count == 0"/>
+                    </group>
+                </page>
             </xpath>
 
         </field>

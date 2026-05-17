@@ -1,15 +1,13 @@
 from odoo import http
 from odoo.http import request
+from odoo.addons.auth_signup.controllers.main import AuthSignupHome
 
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 1. Referral link + Portal dashboard
+# ─────────────────────────────────────────────────────────────────────────────
 
 class AffiliateController(http.Controller):
-    """
-    Two routes:
-      /ref/<code>              – pretty referral link, sets cookie, redirects to /shop
-      /affiliate/dashboard     – portal page for affiliates
-    """
-
-    # ── Referral redirect ─────────────────────────────────────────────────────
 
     @http.route(
         '/ref/<string:code>',
@@ -20,18 +18,18 @@ class AffiliateController(http.Controller):
     )
     def referral_redirect(self, code, redirect='/', **kwargs):
         """
-        Set a 30-day mlm_ref cookie and redirect to /shop.
-        The cookie is later read by sale.order._attach_referrer_from_cookie()
-        when the visitor adds a product to the cart.
+        Pretty referral link.  Sets a 30-day mlm_ref cookie and redirects.
 
-        Usage:  https://yoursite.com/ref/ABC12345
-        Custom: https://yoursite.com/ref/ABC12345?redirect=/shop/product-slug
+        Flow:
+          Affiliate shares  →  https://yoursite.com/ref/ABC12345
+          Visitor clicks    →  cookie 'mlm_ref=ABC12345' set for 30 days
+          Visitor signs up  →  auto-linked as referrer's downline (see signup hook below)
+          Visitor purchases →  commissions generated on order confirm
         """
         partner = request.env['res.partner'].sudo().search(
             [('referral_code', '=', code)], limit=1
         )
 
-        # Only redirect to relative paths to prevent open-redirect attacks
         redirect_url = redirect if (redirect and redirect.startswith('/')) else '/shop'
         response = request.redirect(redirect_url)
 
@@ -39,14 +37,12 @@ class AffiliateController(http.Controller):
             response.set_cookie(
                 'mlm_ref',
                 code,
-                max_age=30 * 24 * 60 * 60,  # 30 days in seconds
+                max_age=30 * 24 * 60 * 60,
                 httponly=True,
                 samesite='Lax',
             )
 
         return response
-
-    # ── Affiliate portal dashboard ────────────────────────────────────────────
 
     @http.route(
         '/affiliate/dashboard',
@@ -57,10 +53,8 @@ class AffiliateController(http.Controller):
     def affiliate_dashboard(self, **kwargs):
         partner = request.env.user.partner_id
 
-        # Auto-generate a referral code on first visit
         if not partner.referral_code:
             partner.sudo().action_generate_referral_code()
-            # Re-read after sudo write
             partner = request.env.user.partner_id
 
         base_url = (
@@ -71,8 +65,7 @@ class AffiliateController(http.Controller):
         )
         referral_url = (
             f"{base_url}/ref/{partner.referral_code}"
-            if partner.referral_code
-            else ''
+            if partner.referral_code else ''
         )
 
         commissions = request.env['mlm.commission'].sudo().search(
@@ -103,3 +96,77 @@ class AffiliateController(http.Controller):
             'stats':        stats,
             'downline':     downline,
         })
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 2. Signup hook — link new user as downline of the referrer
+# ─────────────────────────────────────────────────────────────────────────────
+
+class AffiliateSignupController(AuthSignupHome):
+    """
+    Extends Odoo's standard signup to auto-link the new user to their referrer.
+
+    When someone who clicked a referral link (cookie present) registers an
+    account within 30 days, we:
+      • set  partner.upline_partner_id  = referrer partner
+      • set  partner.is_affiliate       = True  (they can now refer others)
+      • auto-generate their own referral code so they can start sharing
+
+    This runs ONLY on successful new-account creation (not on login).
+    Errors in MLM logic never block the signup itself.
+    """
+
+    def web_auth_signup(self, *args, **kw):
+        # Capture session uid before signup attempt
+        uid_before = request.session.uid
+
+        response = super().web_auth_signup(*args, **kw)
+
+        # Capture session uid after signup
+        uid_after = request.session.uid
+
+        # A new login happened (uid changed and is now a real user)
+        if uid_after and uid_after != uid_before:
+            try:
+                new_user = (
+                    request.env['res.users']
+                    .sudo()
+                    .browse(uid_after)
+                )
+                if new_user.exists() and new_user.partner_id:
+                    self._mlm_link_new_user(new_user.partner_id)
+            except Exception:
+                # Never let MLM logic crash the signup
+                pass
+
+        return response
+
+    # ── helpers ──────────────────────────────────────────────────────────────
+
+    @staticmethod
+    def _mlm_link_new_user(partner):
+        """
+        Read the mlm_ref cookie and, if valid, set the new partner's upline,
+        enable affiliate status, and generate their own referral code.
+        """
+        ref_code = request.httprequest.cookies.get('mlm_ref', '').strip()
+        if not ref_code:
+            return
+
+        referrer = request.env['res.partner'].sudo().search(
+            [('referral_code', '=', ref_code)], limit=1
+        )
+
+        if not referrer or referrer == partner:
+            return
+
+        # Link the new user as direct downline of the referrer
+        partner.sudo().write({
+            'upline_partner_id': referrer.id,
+            'is_affiliate': True,
+        })
+
+        # Give the new user their own referral code immediately
+        # so they can start referring others right away
+        if not partner.referral_code:
+            partner.sudo().action_generate_referral_code()

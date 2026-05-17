@@ -154,7 +154,7 @@ class SaleOrder(models.Model):
 
     # ── Smart button action ───────────────────────────────────────────────────
 
-    def action_view_commissions(self):
+    def action_view_mlm_commissions(self):
         self.ensure_one()
         return {
             'type': 'ir.actions.act_window',

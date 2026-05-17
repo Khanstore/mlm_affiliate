@@ -1,10 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!--
-        Add an "Affiliate Dashboard" entry on the portal My Account page.
-        Uses portal.portal_docs_entry (available in Odoo 16/17/18).
-    -->
     <template id="portal_my_home_affiliate"
               name="Portal: Affiliate Dashboard entry"
               inherit_id="portal.portal_my_home"
@@ -14,21 +10,18 @@
             <t t-call="portal.portal_docs_entry">
                 <t t-set="title">Affiliate Dashboard</t>
                 <t t-set="url">/affiliate/dashboard</t>
-                <t t-set="text">View your referral link, commissions and downline.</t>
+                <t t-set="text">Your referral link, commissions and downline.</t>
             </t>
         </xpath>
     </template>
 
-    <!-- ── Main dashboard page ────────────────────────────────────────── -->
     <template id="portal_affiliate_dashboard" name="Affiliate Dashboard">
         <t t-call="portal.portal_layout">
-
-            <!-- Page title (Odoo 18 portal_layout accepts o_portal_wrap div) -->
             <div id="wrap" class="o_portal_wrap">
                 <div class="container py-4">
 
                     <!-- Header -->
-                    <div class="row mb-4">
+                    <div class="row mb-4 align-items-center">
                         <div class="col-12">
                             <h2 class="mb-1">
                                 <i class="fa fa-users me-2 text-primary"/>
@@ -40,6 +33,19 @@
                         </div>
                     </div>
 
+                    <!-- Upline notice: show who referred THIS user -->
+                    <t t-if="partner.upline_partner_id">
+                        <div class="alert alert-success d-flex align-items-center mb-4" role="alert">
+                            <i class="fa fa-check-circle fa-lg me-3 text-success"/>
+                            <span>
+                                You were referred by
+                                <strong><t t-esc="partner.upline_partner_id.name"/></strong>.
+                                Your purchases may earn them commissions, and
+                                <strong>your referrals earn YOU commissions</strong>.
+                            </span>
+                        </div>
+                    </t>
+
                     <!-- Referral link card -->
                     <div class="card border-primary shadow-sm mb-4">
                         <div class="card-header bg-primary text-white fw-bold">
@@ -47,7 +53,7 @@
                         </div>
                         <div class="card-body">
                             <t t-if="referral_url">
-                                <div class="input-group">
+                                <div class="input-group mb-2">
                                     <input id="mlm_ref_link"
                                            type="text"
                                            class="form-control font-monospace"
@@ -64,9 +70,28 @@
                                                 setTimeout(function(){ btn.innerText = 'Copy'; }, 2000);
                                             ">Copy</button>
                                 </div>
-                                <p class="text-muted small mt-2 mb-0">
-                                    Share on Facebook, WhatsApp, or any platform.
-                                    Anyone who buys after clicking your link earns you a commission.
+                                <!-- Quick social share links -->
+                                <div class="mt-2 d-flex gap-2 flex-wrap">
+                                    <a t-attf-href="https://www.facebook.com/sharer/sharer.php?u=#{referral_url}"
+                                       target="_blank"
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="fa fa-facebook me-1"/>Share on Facebook
+                                    </a>
+                                    <a t-attf-href="https://wa.me/?text=Check%20this%20out%3A%20#{referral_url}"
+                                       target="_blank"
+                                       class="btn btn-sm btn-outline-success">
+                                        <i class="fa fa-whatsapp me-1"/>Share on WhatsApp
+                                    </a>
+                                    <a t-attf-href="https://t.me/share/url?url=#{referral_url}"
+                                       target="_blank"
+                                       class="btn btn-sm btn-outline-info">
+                                        <i class="fa fa-telegram me-1"/>Share on Telegram
+                                    </a>
+                                </div>
+                                <p class="text-muted small mt-3 mb-0">
+                                    When someone clicks your link and
+                                    <strong>signs up</strong> or <strong>makes a purchase</strong>
+                                    within 30 days, you earn a commission automatically.
                                 </p>
                             </t>
                             <t t-else="">
@@ -204,7 +229,7 @@
                     <div class="card shadow-sm mb-4">
                         <div class="card-header fw-bold">
                             <i class="fa fa-sitemap me-2"/>
-                            My Direct Referrals
+                            My Direct Referrals (Level 1)
                             <span class="badge bg-primary ms-2">
                                 <t t-esc="len(downline)"/>
                             </span>
@@ -216,17 +241,26 @@
                                         <thead class="table-light">
                                             <tr>
                                                 <th>Name</th>
-                                                <th>Joined</th>
+                                                <th>Joined via your link</th>
+                                                <th>Their referrals</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <t t-foreach="downline" t-as="member">
                                                 <tr>
-                                                    <td><t t-esc="member.name"/></td>
+                                                    <td>
+                                                        <i class="fa fa-user-circle me-1 text-muted"/>
+                                                        <t t-esc="member.name"/>
+                                                    </td>
                                                     <td>
                                                         <t t-if="member.create_date">
                                                             <t t-esc="member.create_date.strftime('%d %b %Y')"/>
                                                         </t>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge bg-light text-dark border">
+                                                            <t t-esc="member.downline_count"/> referral(s)
+                                                        </span>
                                                     </td>
                                                 </tr>
                                             </t>
@@ -237,15 +271,59 @@
                             <t t-else="">
                                 <div class="text-center py-4 text-muted">
                                     <i class="fa fa-users fa-2x mb-2 d-block"/>
-                                    No referrals yet.
+                                    No one has signed up through your link yet.<br/>
+                                    <small>Share your link above to start building your network.</small>
                                 </div>
                             </t>
                         </div>
                     </div>
 
+                    <!-- How it works -->
+                    <div class="card bg-light border-0 mb-2">
+                        <div class="card-body">
+                            <h6 class="fw-bold mb-3">
+                                <i class="fa fa-question-circle me-2 text-primary"/>
+                                How it works
+                            </h6>
+                            <div class="row g-3 text-center">
+                                <div class="col-12 col-md-4">
+                                    <div class="p-3">
+                                        <i class="fa fa-share-alt fa-2x text-primary mb-2 d-block"/>
+                                        <strong>1. Share your link</strong>
+                                        <p class="small text-muted mb-0">
+                                            Copy your referral link and share it on
+                                            Facebook, WhatsApp, Telegram or anywhere.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-md-4">
+                                    <div class="p-3">
+                                        <i class="fa fa-user-plus fa-2x text-success mb-2 d-block"/>
+                                        <strong>2. They sign up or buy</strong>
+                                        <p class="small text-muted mb-0">
+                                            When someone clicks your link and registers
+                                            or makes a purchase within 30 days, they are
+                                            linked to you automatically.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-md-4">
+                                    <div class="p-3">
+                                        <i class="fa fa-money fa-2x text-warning mb-2 d-block"/>
+                                        <strong>3. You earn commissions</strong>
+                                        <p class="small text-muted mb-0">
+                                            Every time they — or their referrals —
+                                            make a purchase, you earn a commission
+                                            based on the product's commission rules.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div><!-- /container -->
             </div><!-- /o_portal_wrap -->
-
         </t>
     </template>
 

@@ -11,7 +11,7 @@
             <!-- Smart buttons -->
             <xpath expr="//div[@name='button_box']" position="inside">
 
-                <button name="action_view_commissions"
+                <button name="action_view_mlm_commissions"
                         type="object"
                         class="oe_stat_button"
                         icon="fa-money"
@@ -24,7 +24,7 @@
                     </div>
                 </button>
 
-                <button name="action_view_commissions"
+                <button name="action_view_mlm_commissions"
                         type="object"
                         class="oe_stat_button"
                         icon="fa-users"
