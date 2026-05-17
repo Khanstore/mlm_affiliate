@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ── Commission Rules tab on Product form ───────────────────────── -->
+    <record id="view_product_template_commission_tab" model="ir.ui.view">
+        <field name="name">product.template.commission.tab</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="Commission Rules" name="mlm_commission">
+
+                    <!--
+                        invisible="commission_rule_ids" means:
+                          hide the alert when the field is non-empty (has rules).
+                        So the alert is VISIBLE only when the list is empty.
+                    -->
+                    <div class="alert alert-info mb-3" role="alert"
+                         invisible="commission_rule_ids">
+                        <strong>No commission rules yet.</strong>
+                        Add one row per MLM level below.
+                        Level 1 = direct referrer · Level 2 = their upline · etc.
+                    </div>
+
+                    <field name="commission_rule_ids">
+                        <list editable="bottom">
+                            <field name="level"/>
+                            <field name="commission_type"/>
+                            <field name="commission_value"
+                                   string="Value (% or fixed amount)"/>
+                            <field name="active"/>
+                        </list>
+                    </field>
+
+                    <p class="text-muted mt-2 mb-0">
+                        <em>
+                            Percentage: calculated on the order line subtotal
+                            (after discount, before tax).
+                            Fixed: flat amount per line, regardless of quantity.
+                        </em>
+                    </p>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ── Referrer field + smart button on Sale Order form ──────────── -->
+    <record id="view_sale_order_referrer" model="ir.ui.view">
+        <field name="name">sale.order.referrer</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+
+            <!-- Smart button (only visible when commissions exist) -->
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_commissions"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-money"
+                        invisible="commission_count == 0">
+                    <div class="o_stat_info">
+                        <span class="o_stat_value">
+                            <field name="commission_count"/>
+                        </span>
+                        <span class="o_stat_text">Commissions</span>
+                    </div>
+                </button>
+            </xpath>
+
+            <!--
+                Inject referrer fields into the Other Info tab.
+                We add a dedicated group so it never depends on the
+                internal structure of an existing group.
+            -->
+            <xpath expr="//page[@name='other_info']" position="inside">
+                <group string="Affiliate Referral" name="affiliate_referral">
+                    <field name="referrer_partner_id"/>
+                    <field name="referral_code_used"
+                           invisible="not referral_code_used"/>
+                    <field name="total_commission_amount"
+                           string="Total Commissions"
+                           invisible="commission_count == 0"/>
+                </group>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>

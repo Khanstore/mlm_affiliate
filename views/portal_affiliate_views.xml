@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!--
+        Add an "Affiliate Dashboard" entry on the portal My Account page.
+        Uses portal.portal_docs_entry (available in Odoo 16/17/18).
+    -->
+    <template id="portal_my_home_affiliate"
+              name="Portal: Affiliate Dashboard entry"
+              inherit_id="portal.portal_my_home"
+              customize_show="True"
+              priority="50">
+        <xpath expr="//div[contains(@class,'o_portal_docs')]" position="inside">
+            <t t-call="portal.portal_docs_entry">
+                <t t-set="title">Affiliate Dashboard</t>
+                <t t-set="url">/affiliate/dashboard</t>
+                <t t-set="text">View your referral link, commissions and downline.</t>
+            </t>
+        </xpath>
+    </template>
+
+    <!-- ── Main dashboard page ────────────────────────────────────────── -->
+    <template id="portal_affiliate_dashboard" name="Affiliate Dashboard">
+        <t t-call="portal.portal_layout">
+
+            <!-- Page title (Odoo 18 portal_layout accepts o_portal_wrap div) -->
+            <div id="wrap" class="o_portal_wrap">
+                <div class="container py-4">
+
+                    <!-- Header -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h2 class="mb-1">
+                                <i class="fa fa-users me-2 text-primary"/>
+                                Affiliate Dashboard
+                            </h2>
+                            <p class="text-muted mb-0">
+                                Share your referral link and earn commissions on every sale.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Referral link card -->
+                    <div class="card border-primary shadow-sm mb-4">
+                        <div class="card-header bg-primary text-white fw-bold">
+                            <i class="fa fa-link me-2"/>Your Referral Link
+                        </div>
+                        <div class="card-body">
+                            <t t-if="referral_url">
+                                <div class="input-group">
+                                    <input id="mlm_ref_link"
+                                           type="text"
+                                           class="form-control font-monospace"
+                                           t-att-value="referral_url"
+                                           readonly="readonly"/>
+                                    <button class="btn btn-outline-secondary"
+                                            type="button"
+                                            onclick="
+                                                var el = document.getElementById('mlm_ref_link');
+                                                el.select();
+                                                document.execCommand('copy');
+                                                this.innerText = 'Copied!';
+                                                var btn = this;
+                                                setTimeout(function(){ btn.innerText = 'Copy'; }, 2000);
+                                            ">Copy</button>
+                                </div>
+                                <p class="text-muted small mt-2 mb-0">
+                                    Share on Facebook, WhatsApp, or any platform.
+                                    Anyone who buys after clicking your link earns you a commission.
+                                </p>
+                            </t>
+                            <t t-else="">
+                                <p class="text-warning mb-0">
+                                    <i class="fa fa-exclamation-triangle me-1"/>
+                                    No referral code assigned yet. Please contact support.
+                                </p>
+                            </t>
+                        </div>
+                    </div>
+
+                    <!-- Stats row -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-6 col-md-3">
+                            <div class="card text-center shadow-sm h-100">
+                                <div class="card-body py-3">
+                                    <div class="h3 fw-bold text-warning mb-1">
+                                        <t t-esc="'%.2f' % stats['pending']"/>
+                                    </div>
+                                    <small class="text-muted">Pending</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="card text-center shadow-sm h-100">
+                                <div class="card-body py-3">
+                                    <div class="h3 fw-bold text-info mb-1">
+                                        <t t-esc="'%.2f' % stats['approved']"/>
+                                    </div>
+                                    <small class="text-muted">Approved</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="card text-center shadow-sm h-100">
+                                <div class="card-body py-3">
+                                    <div class="h3 fw-bold text-success mb-1">
+                                        <t t-esc="'%.2f' % stats['paid']"/>
+                                    </div>
+                                    <small class="text-muted">Paid Out</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="card text-center shadow-sm h-100 border-success">
+                                <div class="card-body py-3">
+                                    <div class="h3 fw-bold text-primary mb-1">
+                                        <t t-esc="'%.2f' % stats['wallet_balance']"/>
+                                    </div>
+                                    <small class="text-muted">Wallet Balance</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Commission history -->
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header fw-bold">
+                            <i class="fa fa-table me-2"/>Recent Commissions
+                        </div>
+                        <div class="card-body p-0">
+                            <t t-if="commissions">
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-sm mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Ref</th>
+                                                <th>Date</th>
+                                                <th>Product</th>
+                                                <th>Level</th>
+                                                <th>Amount</th>
+                                                <th>Payout</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <t t-foreach="commissions" t-as="com">
+                                                <tr>
+                                                    <td><small><t t-esc="com.name"/></small></td>
+                                                    <td>
+                                                        <t t-if="com.order_date">
+                                                            <t t-esc="com.order_date.strftime('%d %b %Y')"/>
+                                                        </t>
+                                                    </td>
+                                                    <td><t t-esc="com.product_id.name or '-'"/></td>
+                                                    <td>
+                                                        <span class="badge bg-secondary">
+                                                            L<t t-esc="com.level"/>
+                                                        </span>
+                                                    </td>
+                                                    <td class="fw-bold">
+                                                        <t t-esc="'%.2f' % com.amount"/>
+                                                    </td>
+                                                    <td>
+                                                        <t t-if="com.payout_method == 'wallet'">
+                                                            <span class="badge bg-primary">Wallet</span>
+                                                        </t>
+                                                        <t t-elif="com.payout_method == 'bank'">
+                                                            <span class="badge bg-info text-dark">Bank</span>
+                                                        </t>
+                                                        <t t-else="">
+                                                            <span class="badge bg-warning text-dark">Coupon</span>
+                                                        </t>
+                                                    </td>
+                                                    <td>
+                                                        <t t-if="com.state == 'pending'">
+                                                            <span class="badge bg-warning text-dark">Pending</span>
+                                                        </t>
+                                                        <t t-elif="com.state == 'approved'">
+                                                            <span class="badge bg-info text-dark">Approved</span>
+                                                        </t>
+                                                        <t t-elif="com.state == 'paid'">
+                                                            <span class="badge bg-success">Paid</span>
+                                                        </t>
+                                                        <t t-else="">
+                                                            <span class="badge bg-secondary">Cancelled</span>
+                                                        </t>
+                                                    </td>
+                                                </tr>
+                                            </t>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </t>
+                            <t t-else="">
+                                <div class="text-center py-5 text-muted">
+                                    <i class="fa fa-inbox fa-3x mb-3 d-block"/>
+                                    No commissions yet — start sharing your link!
+                                </div>
+                            </t>
+                        </div>
+                    </div>
+
+                    <!-- Direct downline -->
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header fw-bold">
+                            <i class="fa fa-sitemap me-2"/>
+                            My Direct Referrals
+                            <span class="badge bg-primary ms-2">
+                                <t t-esc="len(downline)"/>
+                            </span>
+                        </div>
+                        <div class="card-body p-0">
+                            <t t-if="downline">
+                                <div class="table-responsive">
+                                    <table class="table table-sm mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Name</th>
+                                                <th>Joined</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <t t-foreach="downline" t-as="member">
+                                                <tr>
+                                                    <td><t t-esc="member.name"/></td>
+                                                    <td>
+                                                        <t t-if="member.create_date">
+                                                            <t t-esc="member.create_date.strftime('%d %b %Y')"/>
+                                                        </t>
+                                                    </td>
+                                                </tr>
+                                            </t>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </t>
+                            <t t-else="">
+                                <div class="text-center py-4 text-muted">
+                                    <i class="fa fa-users fa-2x mb-2 d-block"/>
+                                    No referrals yet.
+                                </div>
+                            </t>
+                        </div>
+                    </div>
+
+                </div><!-- /container -->
+            </div><!-- /o_portal_wrap -->
+
+        </t>
+    </template>
+
+</odoo>

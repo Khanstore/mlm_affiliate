@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ── Extend partner form ────────────────────────────────────────── -->
+    <record id="view_partner_form_affiliate" model="ir.ui.view">
+        <field name="name">res.partner.form.affiliate</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+
+            <!-- Smart buttons -->
+            <xpath expr="//div[@name='button_box']" position="inside">
+
+                <button name="action_view_commissions"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-money"
+                        invisible="not commission_ids">
+                    <div class="o_stat_info">
+                        <span class="o_stat_value">
+                            <field name="total_commission_earned"/>
+                        </span>
+                        <span class="o_stat_text">Earned</span>
+                    </div>
+                </button>
+
+                <button name="action_view_commissions"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-users"
+                        invisible="downline_count == 0">
+                    <div class="o_stat_info">
+                        <span class="o_stat_value">
+                            <field name="downline_count"/>
+                        </span>
+                        <span class="o_stat_text">Downline</span>
+                    </div>
+                </button>
+
+            </xpath>
+
+            <!-- Affiliate / MLM tab (appended safely inside notebook) -->
+            <xpath expr="//notebook" position="inside">
+                <page string="Affiliate / MLM" name="mlm_affiliate">
+                    <group>
+                        <group string="Affiliate Settings">
+                            <field name="is_affiliate"/>
+                            <field name="referral_code"/>
+                            <!-- show link only when code exists -->
+                            <field name="referral_url"
+                                   widget="url"
+                                   invisible="not referral_code"/>
+                            <!-- show button only when code is NOT yet set -->
+                            <button name="action_generate_referral_code"
+                                    type="object"
+                                    string="Generate Referral Code"
+                                    class="btn btn-secondary btn-sm"
+                                    invisible="referral_code"/>
+                        </group>
+                        <group string="MLM Chain">
+                            <field name="upline_partner_id"/>
+                            <field name="affiliate_wallet_balance"/>
+                        </group>
+                    </group>
+
+                    <separator string="Direct Downline (Level 1 Referrals)"/>
+                    <field name="downline_ids" readonly="1">
+                        <list>
+                            <field name="name"/>
+                            <field name="email"/>
+                            <field name="referral_code"/>
+                            <field name="is_affiliate"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+
+        </field>
+    </record>
+
+    <!-- ── Standalone affiliate list ──────────────────────────────────── -->
+    <record id="view_affiliate_partner_list" model="ir.ui.view">
+        <field name="name">res.partner.affiliate.list</field>
+        <field name="model">res.partner</field>
+        <field name="arch" type="xml">
+            <list string="Affiliates">
+                <field name="name"/>
+                <field name="email"/>
+                <field name="referral_code"/>
+                <field name="upline_partner_id"/>
+                <field name="downline_count"            string="Direct Referrals"/>
+                <field name="affiliate_wallet_balance"  string="Wallet Balance"/>
+                <field name="total_commission_earned"   string="Total Earned"/>
+                <field name="is_affiliate"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ── Action ─────────────────────────────────────────────────────── -->
+    <record id="action_affiliate_partners" model="ir.actions.act_window">
+        <field name="name">Affiliates</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_affiliate_partner_list"/>
+        <field name="domain">[('is_affiliate', '=', True)]</field>
+        <field name="context">{'default_is_affiliate': True}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No affiliates yet!</p>
+            <p>Open any contact, go to the <strong>Affiliate / MLM</strong> tab,
+               tick <strong>Is Affiliate</strong>, and generate a referral code.</p>
+        </field>
+    </record>
+
+</odoo>

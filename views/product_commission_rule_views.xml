@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ── List View ──────────────────────────────────────────────────── -->
+    <record id="view_product_commission_rule_list" model="ir.ui.view">
+        <field name="name">product.commission.rule.list</field>
+        <field name="model">product.commission.rule</field>
+        <field name="arch" type="xml">
+            <list string="Commission Rules" editable="bottom">
+                <field name="product_tmpl_id"/>
+                <field name="level"/>
+                <field name="commission_type"/>
+                <field name="commission_value"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ── Form View ──────────────────────────────────────────────────── -->
+    <record id="view_product_commission_rule_form" model="ir.ui.view">
+        <field name="name">product.commission.rule.form</field>
+        <field name="model">product.commission.rule</field>
+        <field name="arch" type="xml">
+            <form string="Commission Rule">
+                <sheet>
+                    <group>
+                        <group string="Product &amp; Level">
+                            <field name="product_tmpl_id"/>
+                            <field name="level"/>
+                            <field name="active"/>
+                        </group>
+                        <group string="Commission">
+                            <field name="commission_type"/>
+                            <field name="commission_value"
+                                   string="Value (%  or  fixed amount)"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ── Search View ────────────────────────────────────────────────── -->
+    <record id="view_product_commission_rule_search" model="ir.ui.view">
+        <field name="name">product.commission.rule.search</field>
+        <field name="model">product.commission.rule</field>
+        <field name="arch" type="xml">
+            <search string="Commission Rules">
+                <field name="product_tmpl_id"/>
+                <field name="level"/>
+                <filter name="active" string="Active" domain="[('active','=',True)]"/>
+                <filter name="percent" string="Percentage" domain="[('commission_type','=','percent')]"/>
+                <filter name="fixed" string="Fixed" domain="[('commission_type','=','fixed')]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_product" string="Product" context="{'group_by':'product_tmpl_id'}"/>
+                    <filter name="group_level"   string="Level"   context="{'group_by':'level'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ── Action ─────────────────────────────────────────────────────── -->
+    <record id="action_product_commission_rule" model="ir.actions.act_window">
+        <field name="name">Commission Rules</field>
+        <field name="res_model">product.commission.rule</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_product_commission_rule_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No commission rules yet!
+            </p>
+            <p>
+                Add rules here or open any product and go to the
+                <strong>Commission Rules</strong> tab.
+            </p>
+        </field>
+    </record>
+
+</odoo>

@@ -1,0 +1,35 @@
+<odoo>
+    <record id="view_order_form_mlm_affiliate" model="ir.ui.view">
+        <field name="name">sale.order.form.mlm.affiliate</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_mlm_commissions" type="object" class="oe_stat_button" icon="fa-money" groups="mlm_affiliate.group_mlm_manager" invisible="mlm_commission_count == 0">
+                    <field name="mlm_commission_count" widget="statinfo" string="MLM Commissions"/>
+                </button>
+            </xpath>
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="mlm_referrer_id" groups="mlm_affiliate.group_mlm_manager"/>
+            </xpath>
+            <xpath expr="//notebook" position="inside">
+                <page string="MLM Commissions" groups="mlm_affiliate.group_mlm_manager" invisible="mlm_commission_count == 0">
+                    <field name="mlm_commission_ids" readonly="1">
+                        <list>
+                            <field name="name"/>
+                            <field name="beneficiary_id"/>
+                            <field name="source_referrer_id"/>
+                            <field name="product_id"/>
+                            <field name="level"/>
+                            <field name="commission_base"/>
+                            <field name="commission_percent"/>
+                            <field name="amount"/>
+                            <field name="currency_id" column_invisible="1"/>
+                            <field name="state"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>
