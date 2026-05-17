@@ -10,27 +10,19 @@ from odoo.addons.auth_signup.controllers.main import AuthSignupHome
 class AffiliateController(http.Controller):
 
     @http.route(
-        '/ref/<string:code>',
+        '/ref/<string:code>/<path:subpath>',
         type='http',
         auth='public',
         website=True,
         sitemap=False,
     )
-    def referral_redirect(self, code, redirect='/', **kwargs):
-        """
-        Pretty referral link.  Sets a 30-day mlm_ref cookie and redirects.
-
-        Flow:
-          Affiliate shares  →  https://yoursite.com/ref/ABC12345
-          Visitor clicks    →  cookie 'mlm_ref=ABC12345' set for 30 days
-          Visitor signs up  →  auto-linked as referrer's downline (see signup hook below)
-          Visitor purchases →  commissions generated on order confirm
-        """
+    def referral_redirect(self, code, subpath='', **kwargs):  # ← added subpath
         partner = request.env['res.partner'].sudo().search(
             [('referral_code', '=', code)], limit=1
         )
 
-        redirect_url = redirect if (redirect and redirect.startswith('/')) else '/shop'
+        # Build redirect: use subpath from URL, fall back to /shop
+        redirect_url = '/{}'.format(subpath.lstrip('/')) if subpath else '/shop'  # ← use subpath
         response = request.redirect(redirect_url)
 
         if partner:
