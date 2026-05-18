@@ -1,6 +1,6 @@
 {
     'name': 'MLM Affiliate Referral',
-    'version': '18.0.1.0.0',
+    'version': '18.0.2.0.0',
     'category': 'Website/eCommerce',
     'summary': 'Multi-level affiliate referral commissions for Odoo 18 eCommerce',
     'author': 'Custom Development',
@@ -9,21 +9,28 @@
         'sale_management',
         'portal',
         'mail',
-        'auth_signup',   # required: hook into signup to auto-link downline
+        'auth_signup',
+        'base_setup',    # required for res.config.settings xpath
     ],
     'data': [
+        'security/mlm_security.xml',
         'security/ir.model.access.csv',
         'data/sequence_data.xml',
+        'views/mlm_level_rate_views.xml',
         'views/product_commission_rule_views.xml',
         'views/res_partner_views.xml',
         'views/mlm_commission_views.xml',
         'views/product_template_views.xml',
         'views/portal_affiliate_views.xml',
+        'views/mlm_settings_views.xml',
         'views/menus.xml',
+        'views/website_templates.xml',
+        'views/og_redirect_template.xml',
     ],
     'assets': {
         'web.assets_frontend': [
-            'mlm_affiliate/static/src/js/referral_tracker.js',
+            'static/src/js/referral_tracker.js',
+            'static/src/js/affiliate_share.js',
         ],
     },
     'installable': True,

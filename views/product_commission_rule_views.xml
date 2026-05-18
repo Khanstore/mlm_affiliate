@@ -1,77 +1,76 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- ── List View ──────────────────────────────────────────────────── -->
+    <!-- ── List ───────────────────────────────────────────────────────── -->
     <record id="view_product_commission_rule_list" model="ir.ui.view">
         <field name="name">product.commission.rule.list</field>
         <field name="model">product.commission.rule</field>
         <field name="arch" type="xml">
-            <list string="Commission Rules" editable="bottom">
+            <list string="Product Commission Rules" editable="bottom">
                 <field name="product_tmpl_id"/>
-                <field name="level"/>
                 <field name="commission_type"/>
-                <field name="commission_value"/>
+                <field name="commission_value" string="Total Commission (% or fixed)"/>
                 <field name="active"/>
             </list>
         </field>
     </record>
 
-    <!-- ── Form View ──────────────────────────────────────────────────── -->
+    <!-- ── Form ───────────────────────────────────────────────────────── -->
     <record id="view_product_commission_rule_form" model="ir.ui.view">
         <field name="name">product.commission.rule.form</field>
         <field name="model">product.commission.rule</field>
         <field name="arch" type="xml">
-            <form string="Commission Rule">
+            <form string="Product Commission Rule">
                 <sheet>
                     <group>
-                        <group string="Product &amp; Level">
+                        <group string="Product">
                             <field name="product_tmpl_id"/>
-                            <field name="level"/>
                             <field name="active"/>
                         </group>
-                        <group string="Commission">
+                        <group string="Total Commission">
                             <field name="commission_type"/>
                             <field name="commission_value"
-                                   string="Value (%  or  fixed amount)"/>
+                                   string="Total Commission Value"/>
                         </group>
                     </group>
+                    <div class="alert alert-info mt-2" role="alert">
+                        <i class="fa fa-info-circle me-1"/>
+                        This is the <strong>total commission pot</strong> for this product.
+                        It is split across MLM levels using the rates defined in
+                        <strong>Configuration → Level Distribution Rates</strong>.
+                    </div>
                 </sheet>
             </form>
         </field>
     </record>
 
-    <!-- ── Search View ────────────────────────────────────────────────── -->
+    <!-- ── Search ─────────────────────────────────────────────────────── -->
     <record id="view_product_commission_rule_search" model="ir.ui.view">
         <field name="name">product.commission.rule.search</field>
         <field name="model">product.commission.rule</field>
         <field name="arch" type="xml">
             <search string="Commission Rules">
                 <field name="product_tmpl_id"/>
-                <field name="level"/>
-                <filter name="active" string="Active" domain="[('active','=',True)]"/>
-                <filter name="percent" string="Percentage" domain="[('commission_type','=','percent')]"/>
-                <filter name="fixed" string="Fixed" domain="[('commission_type','=','fixed')]"/>
-                <group expand="0" string="Group By">
-                    <filter name="group_product" string="Product" context="{'group_by':'product_tmpl_id'}"/>
-                    <filter name="group_level"   string="Level"   context="{'group_by':'level'}"/>
-                </group>
+                <filter name="active"   string="Active"     domain="[('active','=',True)]"/>
+                <filter name="percent"  string="Percentage" domain="[('commission_type','=','percent')]"/>
+                <filter name="fixed"    string="Fixed"      domain="[('commission_type','=','fixed')]"/>
             </search>
         </field>
     </record>
 
     <!-- ── Action ─────────────────────────────────────────────────────── -->
     <record id="action_product_commission_rule" model="ir.actions.act_window">
-        <field name="name">Commission Rules</field>
+        <field name="name">Product Commission Rules</field>
         <field name="res_model">product.commission.rule</field>
         <field name="view_mode">list,form</field>
         <field name="search_view_id" ref="view_product_commission_rule_search"/>
         <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                No commission rules yet!
-            </p>
+            <p class="o_view_nocontent_smiling_face">No rules yet!</p>
             <p>
-                Add rules here or open any product and go to the
-                <strong>Commission Rules</strong> tab.
+                Add one rule per product. Set the <strong>total commission</strong>
+                as a percentage of the sale price or as a fixed amount.<br/>
+                The split across levels is controlled by
+                <strong>Level Distribution Rates</strong>.
             </p>
         </field>
     </record>

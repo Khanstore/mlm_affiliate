@@ -1,52 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- ── Top-level MLM Affiliate menu ──────────────────────────────── -->
     <menuitem id="menu_mlm_affiliate_root"
               name="MLM Affiliate"
               sequence="85"
               web_icon="mlm_affiliate,static/description/icon.png"
               groups="sales_team.group_sale_salesman"/>
 
-    <!-- ── Sub-menus ─────────────────────────────────────────────────── -->
+    <!-- Commissions -->
     <menuitem id="menu_mlm_commissions"
               name="Commissions"
               parent="menu_mlm_affiliate_root"
               sequence="10"/>
-
     <menuitem id="menu_mlm_commission_all"
               name="All Commissions"
               parent="menu_mlm_commissions"
               action="action_mlm_commission"
               sequence="10"/>
-
     <menuitem id="menu_mlm_commission_pending"
               name="Pending Approval"
               parent="menu_mlm_commissions"
               action="action_mlm_commission_pending"
               sequence="20"/>
 
+    <!-- Network -->
     <menuitem id="menu_mlm_network"
               name="Network"
               parent="menu_mlm_affiliate_root"
               sequence="20"/>
-
     <menuitem id="menu_mlm_affiliates"
               name="Affiliates"
               parent="menu_mlm_network"
               action="action_affiliate_partners"
               sequence="10"/>
 
+    <!-- Configuration -->
     <menuitem id="menu_mlm_config"
               name="Configuration"
               parent="menu_mlm_affiliate_root"
               sequence="30"
               groups="sales_team.group_sale_salesman_all_leads"/>
-
     <menuitem id="menu_mlm_commission_rules"
-              name="Commission Rules"
+              name="Product Commission Rules"
               parent="menu_mlm_config"
               action="action_product_commission_rule"
               sequence="10"/>
+    <menuitem id="menu_mlm_level_rates"
+              name="Level Distribution Rates"
+              parent="menu_mlm_config"
+              action="action_mlm_level_rate"
+              sequence="20"/>
 
 </odoo>

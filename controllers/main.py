@@ -1,3 +1,4 @@
+import re
 from odoo import http
 from odoo.http import request
 from odoo.addons.auth_signup.controllers.main import AuthSignupHome
@@ -10,21 +11,57 @@ from odoo.addons.auth_signup.controllers.main import AuthSignupHome
 class AffiliateController(http.Controller):
 
     @http.route(
-        '/ref/<string:code>/<path:subpath>',
+        ['/ref/<string:code>',
+        '/ref/<string:code>/<path:subpath>'],
         type='http',
         auth='public',
         website=True,
         sitemap=False,
     )
-    def referral_redirect(self, code, subpath='', **kwargs):  # ← added subpath
+    def referral_redirect(self, code, subpath='', **kwargs):
+        """
+        Sets the mlm_ref cookie then either:
+          - Renders an OG-tagged intermediate page (when a product is found)
+            so Facebook/WhatsApp/etc. can generate a rich link preview, OR
+          - Falls back to a plain 302 redirect for non-product paths.
+
+        Facebook's crawler never follows 302 redirects for OG scraping, so
+        a bare redirect produces no preview.  This page contains all the
+        og: tags the crawler needs, plus an instant JS redirect for humans.
+        """
         partner = request.env['res.partner'].sudo().search(
             [('referral_code', '=', code)], limit=1
         )
 
-        # Build redirect: use subpath from URL, fall back to /shop
-        redirect_url = '/{}'.format(subpath.lstrip('/')) if subpath else '/shop'  # ← use subpath
-        response = request.redirect(redirect_url)
+        redirect_url = '/{}'.format(subpath.lstrip('/')) if subpath else '/shop'
+        # if not subpath:
+        #     response = request.redirect(redirect_url)
+        # ── Try to find the product for OG tags ──────────────────────────
+        product = self._product_from_subpath(subpath)
 
+        if product:
+            base_url = (
+                request.env['ir.config_parameter']
+                .sudo()
+                .get_param('web.base.url', '')
+                .rstrip('/')
+            )
+            # Full canonical referral URL (what was shared)
+            referral_url = '{}/ref/{}/{}'.format(base_url, code, subpath.lstrip('/'))
+
+            response = request.render(
+                'mlm_affiliate.referral_og_redirect',
+                {
+                    'product':      product,
+                    'redirect_url': redirect_url,
+                    'referral_url': referral_url,
+                    'base_url':     base_url,
+                }
+            )
+        else:
+            response = request.redirect(redirect_url)
+
+        # ── Set referral cookie regardless of path ────────────────────────
         if partner:
             response.set_cookie(
                 'mlm_ref',
@@ -35,6 +72,34 @@ class AffiliateController(http.Controller):
             )
 
         return response
+
+    # ── helpers ──────────────────────────────────────────────────────────────
+
+    @staticmethod
+    def _product_from_subpath(subpath):
+        """
+        Extract a product.template from a URL subpath like:
+            shop/prb3forms-prb-3-forms-154
+            shop/product/awesome-tee-123
+
+        Odoo appends the product template ID as the last numeric segment,
+        so we pull the trailing integer and do a direct browse().
+        """
+        if not subpath:
+            return None
+
+        # last segment of the path, e.g. "prb3forms-prb-3-forms-154"
+        slug = subpath.rstrip('/').split('/')[-1]
+        match = re.search(r'-(\d+)$', slug)
+        if not match:
+            # try the whole segment being numeric
+            match = re.fullmatch(r'(\d+)', slug)
+        if not match:
+            return None
+
+        product_id = int(match.group(1))
+        product = request.env['product.template'].sudo().browse(product_id)
+        return product if product.exists() else None
 
     @http.route(
         '/affiliate/dashboard',
@@ -95,52 +160,23 @@ class AffiliateController(http.Controller):
 # ─────────────────────────────────────────────────────────────────────────────
 
 class AffiliateSignupController(AuthSignupHome):
-    """
-    Extends Odoo's standard signup to auto-link the new user to their referrer.
-
-    When someone who clicked a referral link (cookie present) registers an
-    account within 30 days, we:
-      • set  partner.upline_partner_id  = referrer partner
-      • set  partner.is_affiliate       = True  (they can now refer others)
-      • auto-generate their own referral code so they can start sharing
-
-    This runs ONLY on successful new-account creation (not on login).
-    Errors in MLM logic never block the signup itself.
-    """
-
     def web_auth_signup(self, *args, **kw):
-        # Capture session uid before signup attempt
         uid_before = request.session.uid
-
         response = super().web_auth_signup(*args, **kw)
-
-        # Capture session uid after signup
         uid_after = request.session.uid
 
-        # A new login happened (uid changed and is now a real user)
         if uid_after and uid_after != uid_before:
             try:
-                new_user = (
-                    request.env['res.users']
-                    .sudo()
-                    .browse(uid_after)
-                )
+                new_user = request.env['res.users'].sudo().browse(uid_after)
                 if new_user.exists() and new_user.partner_id:
                     self._mlm_link_new_user(new_user.partner_id)
             except Exception:
-                # Never let MLM logic crash the signup
                 pass
 
         return response
 
-    # ── helpers ──────────────────────────────────────────────────────────────
-
     @staticmethod
     def _mlm_link_new_user(partner):
-        """
-        Read the mlm_ref cookie and, if valid, set the new partner's upline,
-        enable affiliate status, and generate their own referral code.
-        """
         ref_code = request.httprequest.cookies.get('mlm_ref', '').strip()
         if not ref_code:
             return
@@ -152,13 +188,10 @@ class AffiliateSignupController(AuthSignupHome):
         if not referrer or referrer == partner:
             return
 
-        # Link the new user as direct downline of the referrer
         partner.sudo().write({
             'upline_partner_id': referrer.id,
             'is_affiliate': True,
         })
 
-        # Give the new user their own referral code immediately
-        # so they can start referring others right away
         if not partner.referral_code:
             partner.sudo().action_generate_referral_code()

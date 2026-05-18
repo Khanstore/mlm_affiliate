@@ -1,0 +1,64 @@
+<odoo>
+    <!--
+        Referral OG Redirect Page
+        Served at /ref/<code>/<subpath> instead of a bare 302.
+        Facebook/WhatsApp crawlers read the og: meta tags here.
+        Human visitors are redirected instantly via JS + meta-refresh.
+
+        NOTE: No <!DOCTYPE> allowed — this is an XML file parsed by lxml.
+              The QWeb engine outputs the doctype when rendering.
+    -->
+    <template id="referral_og_redirect" name="Referral OG Redirect Page">
+
+        <t t-set="base_url_val"
+           t-value="request.env['ir.config_parameter'].sudo().get_param('web.base.url','').rstrip('/')"/>
+        <t t-set="og_image"
+           t-value="base_url_val + '/web/image/product.template/' + str(product.id) + '/image_1920'"/>
+        <t t-set="og_desc"
+           t-value="(product.description_sale or product.name or '').strip()"/>
+
+        <html t-att-lang="request.lang.code or 'en'">
+        <head>
+            <meta charset="UTF-8"/>
+            <meta name="viewport" content="width=device-width, initial-scale=1"/>
+            <title t-out="product.name"/>
+
+            <!-- Open Graph — read by Facebook, WhatsApp, LinkedIn crawlers -->
+            <meta property="og:type"        content="product"/>
+            <meta property="og:site_name"   t-att-content="request.website.name or ''"/>
+            <meta property="og:title"       t-att-content="product.name or ''"/>
+            <meta property="og:description" t-att-content="og_desc"/>
+            <meta property="og:image"       t-att-content="og_image"/>
+            <meta property="og:image:width"  content="1200"/>
+            <meta property="og:image:height" content="630"/>
+            <meta property="og:url"         t-att-content="referral_url"/>
+
+            <!-- Twitter / X card -->
+            <meta name="twitter:card"        content="summary_large_image"/>
+            <meta name="twitter:title"       t-att-content="product.name or ''"/>
+            <meta name="twitter:description" t-att-content="og_desc"/>
+            <meta name="twitter:image"       t-att-content="og_image"/>
+
+            <!-- Meta-refresh fallback redirect for humans -->
+            <meta http-equiv="refresh" t-att-content="'0;url=' + redirect_url"/>
+        </head>
+        <body style="margin:0;background:#fff;font-family:sans-serif;">
+            <div style="display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:12px;">
+                <p style="color:#555;font-size:15px;">Redirecting&#8230;</p>
+                <a t-att-href="redirect_url" style="color:#007bff;font-size:13px;">
+                    Click here if you are not redirected
+                </a>
+            </div>
+            <!-- JS redirect — store dest in data attr to avoid inline QWeb/XML conflicts -->
+            <div id="mlm_redir" class="d-none" t-att-data-url="redirect_url"/>
+            <script>
+                (function () {
+                    var el = document.getElementById('mlm_redir');
+                    var dest = el ? el.getAttribute('data-url') : '';
+                    if (dest) { window.location.replace(dest); }
+                })();
+            </script>
+        </body>
+        </html>
+    </template>
+</odoo>

@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Task Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Lato:wght@300;400;500;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+
+:root{
+  --bg:#f4f5f7;
+  --card:#ffffff;
+  --border:#e3e6ec;
+  --border-light:#eef0f5;
+  --accent:#1a56db;
+  --accent-hover:#1648c0;
+  --accent-light:#eff4ff;
+  --success:#0ea56e;
+  --success-light:#ecfdf5;
+  --danger:#e53e3e;
+  --text-primary:#1a202c;
+  --text-secondary:#4a5568;
+  --text-muted:#a0aec0;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 16px rgba(0,0,0,.08),0 2px 6px rgba(0,0,0,.04);
+  --radius:10px;
+  --radius-sm:6px;
+}
+
+body{
+  background:var(--bg);
+  font-family:'Lato',sans-serif;
+  font-weight:400;
+  color:var(--text-primary);
+  min-height:100vh;
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+  padding:40px 16px 80px;
+}
+
+.app{
+  width:100%;
+  max-width:640px;
+  animation:fadeUp .4s ease both;
+}
+
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(16px);}
+  to{opacity:1;transform:translateY(0);}
+}
+
+/* Header */
+.header{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  margin-bottom:28px;
+}
+
+.header-left .eyebrow{
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--accent);
+  margin-bottom:6px;
+}
+
+.header-left h1{
+  font-family:'Playfair Display',serif;
+  font-size:36px;
+  font-weight:700;
+  letter-spacing:-.02em;
+  color:var(--text-primary);
+  line-height:1;
+}
+
+.header-stats{text-align:right;}
+
+.stat-number{
+  font-family:'Playfair Display',serif;
+  font-size:34px;
+  font-weight:600;
+  color:var(--text-primary);
+  line-height:1;
+}
+
+.stat-label{
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--text-muted);
+  margin-top:3px;
+}
+
+/* Progress */
+.progress-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:18px 20px;
+  margin-bottom:16px;
+  box-shadow:var(--shadow-sm);
+  display:flex;
+  align-items:center;
+  gap:16px;
+}
+
+.progress-track{
+  flex:1;
+  height:6px;
+  background:var(--border);
+  border-radius:99px;
+  overflow:hidden;
+}
+
+.progress-fill{
+  height:100%;
+  background:linear-gradient(90deg,var(--accent),#4f86f7);
+  border-radius:99px;
+  transition:width .5s cubic-bezier(.4,0,.2,1);
+}
+
+.progress-label{
+  font-size:12px;
+  font-weight:700;
+  color:var(--text-secondary);
+  white-space:nowrap;
+}
+
+.progress-label span{color:var(--accent);}
+
+/* Input */
+.input-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:6px 6px 6px 18px;
+  margin-bottom:16px;
+  box-shadow:var(--shadow-sm);
+  display:flex;
+  align-items:center;
+  gap:8px;
+  transition:box-shadow .2s,border-color .2s;
+}
+
+.input-card:focus-within{
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px rgba(26,86,219,.1),var(--shadow-sm);
+}
+
+.input-card input{
+  flex:1;
+  border:none;
+  outline:none;
+  font-family:'Lato',sans-serif;
+  font-size:14px;
+  color:var(--text-primary);
+  background:transparent;
+}
+
+.input-card input::placeholder{color:var(--text-muted);}
+
+.add-btn{
+  background:var(--accent);
+  color:#fff;
+  border:none;
+  border-radius:var(--radius-sm);
+  padding:10px 20px;
+  font-family:'Lato',sans-serif;
+  font-size:13px;
+  font-weight:700;
+  letter-spacing:.03em;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  transition:background .15s,transform .1s;
+  white-space:nowrap;
+}
+
+.add-btn:hover{background:var(--accent-hover);}
+.add-btn:active{transform:scale(.97);}
+
+/* Toolbar */
+.toolbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:12px;
+  gap:8px;
+}
+
+.filters{
+  display:flex;
+  gap:4px;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:3px;
+  box-shadow:var(--shadow-sm);
+}
+
+.filter-btn{
+  background:none;
+  border:none;
+  border-radius:4px;
+  padding:6px 14px;
+  font-family:'Lato',sans-serif;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:.04em;
+  color:var(--text-muted);
+  cursor:pointer;
+  transition:all .15s;
+}
+
+.filter-btn.active{
+  background:var(--accent);
+  color:#fff;
+  box-shadow:0 1px 4px rgba(26,86,219,.3);
+}
+
+.filter-btn:not(.active):hover{color:var(--text-secondary);background:var(--border-light);}
+
+.clear-btn{
+  background:none;
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:6px 12px;
+  font-family:'Lato',sans-serif;
+  font-size:12px;
+  font-weight:700;
+  color:var(--text-muted);
+  cursor:pointer;
+  transition:all .15s;
+  white-space:nowrap;
+}
+
+.clear-btn:hover{color:var(--danger);border-color:var(--danger);background:#fff5f5;}
+
+/* List */
+#todo-list{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+.todo-item{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:14px 16px;
+  display:flex;
+  align-items:center;
+  gap:14px;
+  box-shadow:var(--shadow-sm);
+  transition:box-shadow .2s,border-color .2s,opacity .25s;
+  animation:itemIn .22s ease both;
+}
+
+@keyframes itemIn{
+  from{opacity:0;transform:translateX(-8px);}
+  to{opacity:1;transform:translateX(0);}
+}
+
+.todo-item:hover{box-shadow:var(--shadow-md);border-color:#d1d9e8;}
+
+.todo-item.done{
+  background:#fafbff;
+  opacity:.6;
+  border-color:var(--border-light);
+  box-shadow:none;
+}
+
+/* Checkbox */
+.check-wrap{
+  width:22px;
+  height:22px;
+  min-width:22px;
+  border-radius:50%;
+  border:2px solid var(--border);
+  background:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  transition:all .18s;
+}
+
+.check-wrap:hover{border-color:var(--accent);background:var(--accent-light);}
+
+.todo-item.done .check-wrap{
+  background:var(--success);
+  border-color:var(--success);
+}
+
+.check-wrap .tick{
+  opacity:0;
+  transform:scale(.4);
+  transition:all .2s cubic-bezier(.34,1.56,.64,1);
+}
+
+.todo-item.done .check-wrap .tick{opacity:1;transform:scale(1);}
+
+/* Priority dot */
+.priority-dot{
+  width:7px;height:7px;
+  border-radius:50%;
+  background:var(--border);
+  min-width:7px;
+  transition:background .2s;
+}
+
+.todo-item:not(.done):hover .priority-dot{background:var(--accent);}
+.todo-item.done .priority-dot{background:var(--success);}
+
+/* Text */
+.todo-text{
+  flex:1;
+  font-size:14px;
+  font-weight:400;
+  color:var(--text-primary);
+  line-height:1.5;
+  word-break:break-word;
+  transition:color .2s;
+}
+
+.todo-item.done .todo-text{
+  color:var(--text-muted);
+  text-decoration:line-through;
+  text-decoration-color:var(--text-muted);
+}
+
+.done-badge{
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--success);
+  background:var(--success-light);
+  border-radius:4px;
+  padding:3px 8px;
+  white-space:nowrap;
+  opacity:0;
+  transition:opacity .2s;
+}
+
+.todo-item.done .done-badge{opacity:1;}
+
+.del-btn{
+  background:none;
+  border:none;
+  cursor:pointer;
+  color:var(--text-muted);
+  padding:4px;
+  border-radius:4px;
+  opacity:0;
+  transition:opacity .15s,color .15s,background .15s;
+  display:flex;
+  align-items:center;
+}
+
+.todo-item:hover .del-btn{opacity:1;}
+.del-btn:hover{color:var(--danger);background:#fff5f5;}
+
+/* Section divider */
+.section-divider{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin:18px 0 12px;
+}
+
+.section-divider span{
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--text-muted);
+  white-space:nowrap;
+}
+
+.section-divider::before,
+.section-divider::after{
+  content:'';flex:1;height:1px;background:var(--border-light);
+}
+
+/* Empty */
+.empty{
+  background:var(--card);
+  border:1px dashed var(--border);
+  border-radius:var(--radius);
+  padding:52px 24px;
+  text-align:center;
+  color:var(--text-muted);
+}
+
+.empty-icon{
+  width:48px;height:48px;
+  background:var(--accent-light);
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 16px;
+  color:var(--accent);
+}
+
+.empty h3{
+  font-family:'Playfair Display',serif;
+  font-size:18px;
+  color:var(--text-secondary);
+  margin-bottom:6px;
+}
+
+.empty p{font-size:13px;line-height:1.6;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="header">
+    <div class="header-left">
+      <div class="eyebrow">Task Manager</div>
+      <h1>My To-Do</h1>
+    </div>
+    <div class="header-stats">
+      <div class="stat-number" id="stat-total">0</div>
+      <div class="stat-label">Total Tasks</div>
+    </div>
+  </div>
+
+  <div class="progress-card">
+    <div class="progress-track">
+      <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+    </div>
+    <div class="progress-label" id="progress-label"><span>0</span> of 0 completed</div>
+  </div>
+
+  <div class="input-card">
+    <svg width="16" height="16" fill="none" viewBox="0 0 16 16" style="color:var(--text-muted);flex-shrink:0">
+      <path d="M8 1v14M1 8h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+    </svg>
+    <input id="todo-input" type="text" placeholder="Add a new task and press Enter…" maxlength="200" autocomplete="off"/>
+    <button class="add-btn" onclick="addTodo()">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      Add Task
+    </button>
+  </div>
+
+  <div class="toolbar">
+    <div class="filters">
+      <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+      <button class="filter-btn" onclick="setFilter('active',this)">Active</button>
+      <button class="filter-btn" onclick="setFilter('done',this)">Done</button>
+    </div>
+    <button class="clear-btn" onclick="clearDone()">Clear completed</button>
+  </div>
+
+  <div id="todo-list"></div>
+
+</div>
+<script>
+  let todos = JSON.parse(localStorage.getItem('pro_todos') || '[]');
+  let filter = 'all';
+  let nextId = todos.length ? Math.max(...todos.map(t=>t.id))+1 : 1;
+
+  function save(){ localStorage.setItem('pro_todos', JSON.stringify(todos)); }
+
+  function addTodo(){
+    const inp = document.getElementById('todo-input');
+    const text = inp.value.trim();
+    if(!text) return;
+    todos.unshift({id:nextId++, text, done:false});
+    inp.value='';
+    save(); render();
+  }
+
+  function toggleTodo(id){
+    const t=todos.find(t=>t.id===id);
+    if(t) t.done=!t.done;
+    save(); render();
+  }
+
+  function deleteTodo(id){ todos=todos.filter(t=>t.id!==id); save(); render(); }
+
+  function clearDone(){ todos=todos.filter(t=>!t.done); save(); render(); }
+
+  function setFilter(f,btn){
+    filter=f;
+    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    render();
+  }
+
+  function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  function itemHTML(t){
+    return `<div class="todo-item ${t.done?'done':''}" id="item-${t.id}">
+      <div class="check-wrap" onclick="toggleTodo(${t.id})" title="${t.done?'Mark pending':'Mark done'}">
+        <svg class="tick" width="11" height="9" viewBox="0 0 11 9" fill="none">
+          <path d="M1 4.2L3.9 7.5L10 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="priority-dot"></div>
+      <span class="todo-text">${esc(t.text)}</span>
+      ${t.done?'<span class="done-badge">Done</span>':''}
+      <button class="del-btn" onclick="deleteTodo(${t.id})" title="Delete">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>`;
+  }
+
+  function render(){
+    const total=todos.length;
+    const done=todos.filter(t=>t.done).length;
+    const pct=total?Math.round(done/total*100):0;
+
+    document.getElementById('stat-total').textContent=total;
+    document.getElementById('progress-fill').style.width=pct+'%';
+    document.getElementById('progress-label').innerHTML=`<span>${done}</span> of ${total} completed`;
+
+    const visible=todos.filter(t=>
+      filter==='all'?true:filter==='done'?t.done:!t.done
+    );
+
+    const list=document.getElementById('todo-list');
+
+    if(!visible.length){
+      const msgs={
+        all:{title:'No tasks yet',sub:'Add your first task above to get started.'},
+        active:{title:'All caught up!',sub:'No pending tasks — great work!'},
+        done:{title:'Nothing completed yet',sub:'Mark a task as done and it will appear here.'}
+      };
+      const m=msgs[filter];
+      list.innerHTML=`<div class="empty">
+        <div class="empty-icon">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+            <rect x="3" y="3" width="16" height="16" rx="3" stroke="currentColor" stroke-width="1.6"/>
+            <path d="M7 11l3 3 5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h3>${m.title}</h3><p>${m.sub}</p>
+      </div>`;
+      return;
+    }
+
+    let html='';
+    if(filter==='all'){
+      const activeItems=visible.filter(t=>!t.done);
+      const doneItems=visible.filter(t=>t.done);
+      activeItems.forEach(t=>{ html+=itemHTML(t); });
+      if(doneItems.length){
+        html+=`<div class="section-divider"><span>Completed (${doneItems.length})</span></div>`;
+        doneItems.forEach(t=>{ html+=itemHTML(t); });
+      }
+    } else {
+      visible.forEach(t=>{ html+=itemHTML(t); });
+    }
+    list.innerHTML=html;
+  }
+
+  document.getElementById('todo-input').addEventListener('keydown',e=>{
+    if(e.key==='Enter') addTodo();
+  });
+
+  render();
+</script>
+</body>
+</html>

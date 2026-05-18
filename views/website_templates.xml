@@ -1,18 +1,22 @@
 <odoo>
-    <template id="product_mlm_share_link" inherit_id="website_sale.product" name="MLM Product Share Link">
-        <xpath expr="//div[@id='product_details']" position="inside">
+    <!--
+        Inject the affiliate code as a hidden data attribute on every product page.
+        affiliate_share.js reads this and rewrites the native Odoo social share
+        buttons (Facebook, X, LinkedIn, WhatsApp, Pinterest, Email) so every
+        link shared through them already contains the affiliate's /ref/<code>/ URL.
+
+        Nothing visible is added to the page — the native share buttons work
+        exactly as before, just with the affiliate link baked in.
+    -->
+    <template id="product_mlm_affiliate_data"
+              inherit_id="website_sale.product"
+              name="MLM Affiliate Share Injection">
+        <xpath expr="//div[@id='product_details']" position="before">
             <t t-set="mlm_partner" t-value="request.env.user.partner_id.sudo()"/>
-            <t t-if="mlm_partner.mlm_partner and mlm_partner.mlm_code">
-                <t t-set="share_url" t-value="request.env['mlm.link.builder'].sudo().product_tracking_url(product, mlm_partner)"/>
-                <div class="mt-3 mb-3 p-3 border rounded">
-                    <label class="form-label fw-semibold mb-2">Your MLM share link</label>
-                    <div class="input-group input-group-sm">
-                        <input class="form-control" type="text" readonly="readonly" t-att-value="share_url"/>
-                        <a class="btn btn-primary" target="_blank" rel="noopener" t-att-href="request.env['mlm.link.builder'].sudo().facebook_share_url(share_url)">
-                            Share on Facebook
-                        </a>
-                    </div>
-                </div>
+            <t t-if="mlm_partner.referral_code">
+                <div id="mlm_affiliate_data"
+                     class="d-none"
+                     t-att-data-ref-code="mlm_partner.referral_code"/>
             </t>
         </xpath>
     </template>

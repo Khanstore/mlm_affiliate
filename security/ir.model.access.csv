@@ -1,8 +1,10 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_product_commission_rule_salesman,product.commission.rule salesman,model_product_commission_rule,sales_team.group_sale_salesman,1,0,0,0
 access_product_commission_rule_manager,product.commission.rule manager,model_product_commission_rule,sales_team.group_sale_salesman_all_leads,1,1,1,1
+access_product_commission_rule_portal,product.commission.rule portal,model_product_commission_rule,base.group_portal,1,0,0,0
 access_mlm_commission_salesman,mlm.commission salesman,model_mlm_commission,sales_team.group_sale_salesman,1,0,0,0
 access_mlm_commission_manager,mlm.commission manager,model_mlm_commission,sales_team.group_sale_salesman_all_leads,1,1,1,1
 access_mlm_commission_portal,mlm.commission portal,model_mlm_commission,base.group_portal,1,0,0,0
 access_mlm_commission_public,mlm.commission public,model_mlm_commission,base.group_public,0,0,0,0
-access_product_commission_rule_portal,product.commission.rule portal,model_product_commission_rule,base.group_portal,1,0,0,0
+access_mlm_level_rate_salesman,mlm.level.rate salesman,model_mlm_level_rate,sales_team.group_sale_salesman,1,0,0,0
+access_mlm_level_rate_manager,mlm.level.rate manager,model_mlm_level_rate,sales_team.group_sale_salesman_all_leads,1,1,1,1
