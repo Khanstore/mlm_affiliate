@@ -36,7 +36,7 @@ class MlmLevelRate(models.Model):
     )
     description = fields.Char(
         string='Description',
-        placeholder='e.g. Direct Referrer, Upline Level 2 …',
+        help='e.g. Direct Referrer, Upline Level 2 …',
     )
     rate = fields.Float(
         string='Rate (%)',

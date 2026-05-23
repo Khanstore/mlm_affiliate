@@ -13,7 +13,7 @@
                     <!-- Alert when no rule set -->
                     <div class="alert alert-info mb-3" role="alert"
                          invisible="commission_rule_ids">
-                        <i class="fa fa-info-circle me-1"/>
+                        <i class="fa fa-info-circle me-1" title="Info"/>
                         <strong>No commission rule set for this product.</strong>
                         Add one record below to enable MLM commissions.
                         The total commission will be automatically distributed

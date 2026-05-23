@@ -73,7 +73,7 @@
                     <!-- L1 Split notice -->
                     <div class="alert alert-info mb-3" role="alert"
                          invisible="not is_l1_split">
-                        <i class="fa fa-info-circle me-1"/>
+                        <i class="fa fa-info-circle me-1" title="Info"/>
                         <strong>Level 1 Split Commission:</strong>
                         The buyer already had an existing upline partner.
                         The Level-1 commission was shared equally (50 / 50) between
@@ -85,7 +85,7 @@
                     <!-- Admin allocation notice -->
                     <div class="alert alert-warning mb-3" role="alert"
                          invisible="not is_admin_allocation">
-                        <i class="fa fa-exclamation-triangle me-1"/>
+                        <i class="fa fa-exclamation-triangle me-1" title="Warning"/>
                         <strong>Admin Allocation:</strong>
                         This commission was redirected to the admin account
                         because Level <field name="level" readonly="1"/>
