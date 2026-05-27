@@ -1,46 +1,84 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- ── Commission Rule tab on Product form ────────────────────────── -->
+    <!-- ═══════════════════════════════════════════════════════════════════
+         PRODUCT TEMPLATE FORM — Commission Rules tab
+         Section A: Template-level rules (by pricelist)
+         Section B: Variant-level overrides (by pricelist)
+         ═══════════════════════════════════════════════════════════════════ -->
     <record id="view_product_template_commission_tab" model="ir.ui.view">
         <field name="name">product.template.commission.tab</field>
         <field name="model">product.template</field>
         <field name="inherit_id" ref="product.product_template_form_view"/>
         <field name="arch" type="xml">
             <xpath expr="//notebook" position="inside">
-                <page string="Commission Rule" name="mlm_commission">
+                <page string="Commission Rules" name="mlm_commission_summary">
 
-                    <!-- Alert when no rule set -->
-                    <div class="alert alert-info mb-3" role="alert"
-                         invisible="commission_rule_ids">
-                        <i class="fa fa-info-circle me-1" title="Info"/>
-                        <strong>No commission rule set for this product.</strong>
-                        Add one record below to enable MLM commissions.
-                        The total commission will be automatically distributed
-                        across levels using the global
-                        <strong>Level Distribution Rates</strong>.
-                    </div>
+                    <!-- ── Section A: Template-level rules ─────────────── -->
+                    <group string="Product-level Rules  (all variants, per pricelist)">
+                        <div class="alert alert-info mb-2" role="alert"
+                             invisible="tmpl_commission_ids">
+                            <i class="fa fa-info-circle me-1" title="Info"/>
+                            No product-level rules. Add rows below — one per
+                            pricelist you want to configure. Leave
+                            <strong>Pricelist</strong> empty for the public
+                            / default rate.
+                        </div>
+                        <field name="tmpl_commission_ids"
+                               nolabel="1"
+                               context="{'default_rule_type': 'template',
+                                         'default_product_tmpl_id': id}">
+                            <list editable="bottom">
+                                <field name="rule_type"    column_invisible="1"/>
+                                <field name="pricelist_id" string="Pricelist"
+                                       optional="show"/>
+                                <field name="pricelist_label" string="Scope"
+                                       readonly="1"/>
+                                <field name="commission_type"/>
+                                <field name="commission_value"
+                                       string="Total Commission (% or fixed)"/>
+                                <field name="active"/>
+                            </list>
+                        </field>
+                    </group>
 
-                    <!--
-                        One record per product (unique constraint).
-                        The inline list acts as a simple form-like entry.
-                    -->
-                    <field name="commission_rule_ids">
-                        <list editable="bottom">
-                            <field name="commission_type"/>
-                            <field name="commission_value"
-                                   string="Total Commission (% or fixed amount)"/>
-                            <field name="active"/>
-                        </list>
-                    </field>
+                    <separator/>
 
-                    <!-- Explanation box when rule is present -->
+                    <!-- ── Section B: Variant-level overrides ──────────── -->
+                    <group string="Variant-level Overrides  (per variant, per pricelist)">
+                        <div class="alert alert-secondary mb-2" role="alert">
+                            <i class="fa fa-info-circle me-1" title="Info"/>
+                            Add rows here to override the product-level rule
+                            for a specific variant and/or pricelist.
+                        </div>
+                        <field name="variant_commission_ids"
+                               nolabel="1"
+                               context="{'default_rule_type': 'variant',
+                                         'default_product_tmpl_id': id}">
+                            <list editable="bottom">
+                                <field name="rule_type" column_invisible="1"/>
+                                <field name="product_id"
+                                       string="Variant"
+                                       domain="[('product_tmpl_id','=',parent.id)]"
+                                       options="{'no_create': True}"/>
+                                <field name="pricelist_id" string="Pricelist"
+                                       optional="show"/>
+                                <field name="pricelist_label" string="Scope"
+                                       readonly="1"/>
+                                <field name="commission_type"/>
+                                <field name="commission_value"
+                                       string="Total Commission (% or fixed)"/>
+                                <field name="active"/>
+                            </list>
+                        </field>
+                    </group>
+
                     <div class="alert alert-success mt-3 mb-0" role="alert"
-                         invisible="not commission_rule_ids">
-                        <i class="fa fa-check-circle me-1"/>
-                        Commission is active. The total pot is split using
-                        <strong>MLM Affiliate → Configuration → Level Distribution Rates</strong>.
-                        Empty levels are credited to the Admin Account in Settings.
+                         invisible="not has_any_commission">
+                        <i class="fa fa-check-circle me-1" title="Success"/>
+                        <strong>Effective priority for this product:</strong>
+                        Variant+PL → Template+PL → Category+PL →
+                        Variant → Template → Category → (no commission)
                     </div>
 
                 </page>
@@ -48,7 +86,10 @@
         </field>
     </record>
 
-    <!-- ── Sale Order: smart button + Affiliate tab ───────────────────── -->
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         SALE ORDER FORM — smart button + Affiliate tab
+         ═══════════════════════════════════════════════════════════════════ -->
     <record id="view_sale_order_referrer" model="ir.ui.view">
         <field name="name">sale.order.referrer</field>
         <field name="model">sale.order</field>
@@ -81,6 +122,11 @@
                         <field name="total_commission_amount"
                                string="Total Commissions"
                                invisible="commission_count == 0"/>
+                    </group>
+                    <group string="Wallet Payment"
+                           invisible="wallet_amount_used == 0">
+                        <field name="wallet_partner_id"/>
+                        <field name="wallet_amount_used"/>
                     </group>
                 </page>
             </xpath>

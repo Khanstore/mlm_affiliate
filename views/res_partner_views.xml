@@ -1,68 +1,73 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- ── Extend partner form ────────────────────────────────────────── -->
     <record id="view_partner_form_affiliate" model="ir.ui.view">
         <field name="name">res.partner.form.affiliate</field>
         <field name="model">res.partner</field>
         <field name="inherit_id" ref="base.view_partner_form"/>
         <field name="arch" type="xml">
 
-            <!-- Smart buttons -->
             <xpath expr="//div[@name='button_box']" position="inside">
-
-                <button name="action_view_mlm_commissions"
-                        type="object"
-                        class="oe_stat_button"
-                        icon="fa-money"
+                <button name="action_view_mlm_commissions" type="object"
+                        class="oe_stat_button" icon="fa-money"
                         invisible="not commission_ids">
                     <div class="o_stat_info">
-                        <span class="o_stat_value">
-                            <field name="total_commission_earned"/>
-                        </span>
+                        <span class="o_stat_value"><field name="total_commission_earned"/></span>
                         <span class="o_stat_text">Earned</span>
                     </div>
                 </button>
-
-                <button name="action_view_mlm_commissions"
-                        type="object"
-                        class="oe_stat_button"
-                        icon="fa-users"
+                <button name="action_view_mlm_commissions" type="object"
+                        class="oe_stat_button" icon="fa-users"
                         invisible="downline_count == 0">
                     <div class="o_stat_info">
-                        <span class="o_stat_value">
-                            <field name="downline_count"/>
-                        </span>
+                        <span class="o_stat_value"><field name="downline_count"/></span>
                         <span class="o_stat_text">Downline</span>
                     </div>
                 </button>
-
+                <!-- FEATURE: click counter smart button -->
+                <button type="object" name="action_view_mlm_commissions"
+                        class="oe_stat_button" icon="fa-mouse-pointer"
+                        invisible="referral_click_count == 0">
+                    <div class="o_stat_info">
+                        <span class="o_stat_value"><field name="referral_click_count"/></span>
+                        <span class="o_stat_text">Link Clicks</span>
+                    </div>
+                </button>
             </xpath>
 
-            <!-- Affiliate / MLM tab (appended safely inside notebook) -->
             <xpath expr="//notebook" position="inside">
                 <page string="Affiliate / MLM" name="mlm_affiliate">
                     <group>
                         <group string="Affiliate Settings">
                             <field name="is_affiliate"/>
                             <field name="referral_code"/>
-                            <!-- show link only when code exists -->
-                            <field name="referral_url"
-                                   widget="url"
-                                   invisible="not referral_code"/>
-                            <!-- show button only when code is NOT yet set -->
-                            <button name="action_generate_referral_code"
-                                    type="object"
+                            <field name="referral_url" widget="url" invisible="not referral_code"/>
+                            <button name="action_generate_referral_code" type="object"
                                     string="Generate Referral Code"
                                     class="btn btn-secondary btn-sm"
                                     invisible="referral_code"/>
+                            <!-- FEATURE: tier field -->
+                            <field name="tier_id"/>
+                            <button name="action_update_tier" type="object"
+                                    string="Re-evaluate Tier"
+                                    class="btn btn-outline-primary btn-sm"
+                                    invisible="not is_affiliate"/>
                         </group>
-                        <group string="MLM Chain">
+                        <group string="MLM Chain &amp; Wallet">
                             <field name="upline_partner_id"/>
                             <field name="affiliate_wallet_balance"/>
+                            <!-- FEATURE: bank account -->
+                            <field name="affiliate_bank_account"
+                                   placeholder="IBAN / account number / mobile wallet"/>
                         </group>
                     </group>
-
+                    <group string="Referral Link Analytics">
+                        <group>
+                            <!-- FEATURE: click tracking fields -->
+                            <field name="referral_click_count" string="Total Link Clicks"/>
+                            <field name="referral_last_click" string="Last Click"/>
+                        </group>
+                    </group>
                     <separator string="Direct Downline (Level 1 Referrals)"/>
                     <field name="downline_ids" readonly="1">
                         <list>
@@ -70,6 +75,7 @@
                             <field name="email"/>
                             <field name="referral_code"/>
                             <field name="is_affiliate"/>
+                            <field name="tier_id"/>
                         </list>
                     </field>
                 </page>
@@ -78,7 +84,6 @@
         </field>
     </record>
 
-    <!-- ── Standalone affiliate list ──────────────────────────────────── -->
     <record id="view_affiliate_partner_list" model="ir.ui.view">
         <field name="name">res.partner.affiliate.list</field>
         <field name="model">res.partner</field>
@@ -87,16 +92,17 @@
                 <field name="name"/>
                 <field name="email"/>
                 <field name="referral_code"/>
+                <field name="tier_id" string="Tier"/>
                 <field name="upline_partner_id"/>
-                <field name="downline_count"            string="Direct Referrals"/>
-                <field name="affiliate_wallet_balance"  string="Wallet Balance"/>
-                <field name="total_commission_earned"   string="Total Earned"/>
+                <field name="downline_count"           string="Direct Referrals"/>
+                <field name="referral_click_count"     string="Link Clicks"/>
+                <field name="affiliate_wallet_balance" string="Wallet Balance"/>
+                <field name="total_commission_earned"  string="Total Earned"/>
                 <field name="is_affiliate"/>
             </list>
         </field>
     </record>
 
-    <!-- ── Action ─────────────────────────────────────────────────────── -->
     <record id="action_affiliate_partners" model="ir.actions.act_window">
         <field name="name">Affiliates</field>
         <field name="res_model">res.partner</field>

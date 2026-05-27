@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_mlm_leaderboard_list" model="ir.ui.view">
+        <field name="name">res.partner.mlm.leaderboard.list</field>
+        <field name="model">res.partner</field>
+        <field name="arch" type="xml">
+            <list string="Top Affiliates" create="false" delete="false" export_xlsx="1">
+                <field name="name" string="Affiliate"/>
+                <field name="tier_id" string="Tier"/>
+                <field name="downline_count" string="Direct Referrals"/>
+                <field name="referral_click_count" string="Link Clicks"/>
+                <field name="total_commission_earned" string="Total Earned" widget="monetary"
+                       options="{'currency_field': 'currency_id'}"/>
+                <field name="affiliate_wallet_balance" string="Wallet Balance" widget="monetary"
+                       options="{'currency_field': 'currency_id'}"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_mlm_leaderboard" model="ir.actions.act_window">
+        <field name="name">Top Affiliates Leaderboard</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">list</field>
+        <field name="view_id" ref="view_mlm_leaderboard_list"/>
+        <field name="domain">[('is_affiliate', '=', True), ('total_commission_earned', '>', 0)]</field>
+        <field name="context">{'order': 'total_commission_earned desc'}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No earnings yet!</p>
+            <p>Once affiliates start earning, they'll appear here ranked by total commissions.</p>
+        </field>
+    </record>
+
+</odoo>

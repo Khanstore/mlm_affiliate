@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_product_category_commission" model="ir.ui.view">
+        <field name="name">product.category.commission</field>
+        <field name="model">product.category</field>
+        <field name="inherit_id" ref="product.product_category_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet" position="inside">
+                <separator string="MLM Commission Rules"/>
+
+                <div class="alert alert-info mb-2" role="alert"
+                     invisible="commission_rule_ids">
+                    <i class="fa fa-info-circle me-1" title="Info"/>
+                    Add rows below — one per pricelist you want to configure.
+                    Leave <strong>Pricelist</strong> empty for the public rate.
+                    Products/variants with a more specific rule will use that instead.
+                </div>
+
+                <field name="commission_rule_ids"
+                       nolabel="1"
+                       context="{'default_rule_type': 'category',
+                                 'default_categ_id': id}">
+                    <list editable="bottom">
+                        <field name="rule_type"    column_invisible="1"/>
+                        <field name="pricelist_id" string="Pricelist" optional="show"/>
+                        <field name="pricelist_label" string="Scope" readonly="1"/>
+                        <field name="commission_type"/>
+                        <field name="commission_value"
+                               string="Total Commission (% or fixed)"/>
+                        <field name="active"/>
+                    </list>
+                </field>
+
+            </xpath>
+        </field>
+    </record>
+</odoo>

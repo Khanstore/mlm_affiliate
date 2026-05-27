@@ -6,10 +6,26 @@
         <field name="name">product.commission.rule.list</field>
         <field name="model">product.commission.rule</field>
         <field name="arch" type="xml">
-            <list string="Product Commission Rules" editable="bottom">
-                <field name="product_tmpl_id"/>
+            <list string="Commission Rules" editable="bottom"
+                  decoration-muted="not active">
+                <field name="sequence" widget="handle"/>
+                <field name="pricelist_id"    string="Pricelist" optional="show"/>
+                <field name="pricelist_label" string="Scope"     optional="show"/>
+                <field name="rule_type"/>
+                <field name="categ_id"
+                       string="Category"
+                       optional="show"
+                       invisible="rule_type != 'category'"/>
+                <field name="product_tmpl_id"
+                       string="Product"
+                       optional="show"
+                       invisible="rule_type != 'template'"/>
+                <field name="product_id"
+                       string="Variant"
+                       optional="show"
+                       invisible="rule_type != 'variant'"/>
                 <field name="commission_type"/>
-                <field name="commission_value" string="Total Commission (% or fixed)"/>
+                <field name="commission_value" string="Total Commission"/>
                 <field name="active"/>
             </list>
         </field>
@@ -20,24 +36,64 @@
         <field name="name">product.commission.rule.form</field>
         <field name="model">product.commission.rule</field>
         <field name="arch" type="xml">
-            <form string="Product Commission Rule">
+            <form string="Commission Rule">
                 <sheet>
                     <group>
-                        <group string="Product">
-                            <field name="product_tmpl_id"/>
+                        <group string="Applies To">
+                            <field name="rule_type" widget="radio"/>
+                            <field name="categ_id"
+                                   invisible="rule_type != 'category'"
+                                   required="rule_type == 'category'"/>
+                            <field name="product_tmpl_id"
+                                   invisible="rule_type != 'template'"
+                                   required="rule_type == 'template'"/>
+                            <field name="product_id"
+                                   invisible="rule_type != 'variant'"
+                                   required="rule_type == 'variant'"/>
                             <field name="active"/>
                         </group>
-                        <group string="Total Commission">
+                        <group string="Commission">
                             <field name="commission_type"/>
                             <field name="commission_value"
                                    string="Total Commission Value"/>
+                            <field name="sequence" string="Priority (lower = first)"/>
                         </group>
                     </group>
+
+                    <!-- Pricelist scope -->
+                    <group string="Pricelist Scope">
+                        <field name="pricelist_id"
+                               string="Restrict to Pricelist"/>
+                        <!-- invisible= replaces t-if/t-else — forbidden in Odoo 18 backend views -->
+                        <div colspan="2" class="text-muted small"
+                             invisible="pricelist_id">
+                            <i class="fa fa-globe me-1" title="Public"/>
+                            <strong>Public / Default:</strong>
+                            This rule applies to all buyers on the public
+                            pricelist, and as a fallback for any pricelist
+                            that has no specific rule for this product.
+                        </div>
+                        <div colspan="2" class="text-muted small"
+                             invisible="not pricelist_id">
+                            <i class="fa fa-tag me-1" title="Pricelist"/>
+                            <strong>Pricelist-specific:</strong>
+                            This rule applies ONLY when the buyer's order
+                            uses the selected pricelist (e.g. Reseller, VIP).
+                            Buyers on the public pricelist will use the
+                            general (no pricelist) rule instead.
+                        </div>
+                    </group>
+
                     <div class="alert alert-info mt-2" role="alert">
-                        <i class="fa fa-info-circle me-1"/>
-                        This is the <strong>total commission pot</strong> for this product.
-                        It is split across MLM levels using the rates defined in
-                        <strong>Configuration → Level Distribution Rates</strong>.
+                        <strong>Lookup priority (highest → lowest):</strong>
+                        <ol class="mb-0 mt-1">
+                            <li>Variant + buyer's pricelist</li>
+                            <li>Template + buyer's pricelist</li>
+                            <li>Category + buyer's pricelist (walks up tree)</li>
+                            <li>Variant (public / no pricelist)</li>
+                            <li>Template (public / no pricelist)</li>
+                            <li>Category (public / no pricelist, walks up tree)</li>
+                        </ol>
                     </div>
                 </sheet>
             </form>
@@ -50,27 +106,50 @@
         <field name="model">product.commission.rule</field>
         <field name="arch" type="xml">
             <search string="Commission Rules">
-                <field name="product_tmpl_id"/>
-                <filter name="active"   string="Active"     domain="[('active','=',True)]"/>
-                <filter name="percent"  string="Percentage" domain="[('commission_type','=','percent')]"/>
-                <filter name="fixed"    string="Fixed"      domain="[('commission_type','=','fixed')]"/>
+                <field name="categ_id"        string="Category"/>
+                <field name="product_tmpl_id" string="Product"/>
+                <field name="product_id"      string="Variant"/>
+                <field name="pricelist_id"    string="Pricelist"/>
+                <separator/>
+                <filter name="public"    string="Public / General"
+                        domain="[('pricelist_id','=',False)]"/>
+                <filter name="has_plist" string="Pricelist-Specific"
+                        domain="[('pricelist_id','!=',False)]"/>
+                <separator/>
+                <filter name="category"  string="Category Rules"
+                        domain="[('rule_type','=','category')]"/>
+                <filter name="template"  string="Product Rules"
+                        domain="[('rule_type','=','template')]"/>
+                <filter name="variant"   string="Variant Rules"
+                        domain="[('rule_type','=','variant')]"/>
+                <separator/>
+                <filter name="active"    string="Active"
+                        domain="[('active','=',True)]"/>
+                <group expand="0" string="Group By">
+                    <filter name="by_pricelist" string="Pricelist"
+                            context="{'group_by':'pricelist_id'}"/>
+                    <filter name="by_type"      string="Rule Type"
+                            context="{'group_by':'rule_type'}"/>
+                </group>
             </search>
         </field>
     </record>
 
     <!-- ── Action ─────────────────────────────────────────────────────── -->
     <record id="action_product_commission_rule" model="ir.actions.act_window">
-        <field name="name">Product Commission Rules</field>
+        <field name="name">Commission Rules</field>
         <field name="res_model">product.commission.rule</field>
         <field name="view_mode">list,form</field>
         <field name="search_view_id" ref="view_product_commission_rule_search"/>
         <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">No rules yet!</p>
+            <p class="o_view_nocontent_smiling_face">No commission rules yet!</p>
             <p>
-                Add one rule per product. Set the <strong>total commission</strong>
-                as a percentage of the sale price or as a fixed amount.<br/>
-                The split across levels is controlled by
-                <strong>Level Distribution Rates</strong>.
+                Rules work at three levels: Category → Product → Variant.<br/>
+                Each can optionally target a specific <strong>Pricelist</strong>
+                (e.g. Reseller, VIP, Wholesale).<br/><br/>
+                Pricelist-specific rules override general rules for buyers
+                on that pricelist. General rules (no pricelist) act as fallback
+                for everyone else.
             </p>
         </field>
     </record>

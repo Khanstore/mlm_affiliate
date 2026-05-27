@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
+    <!-- FIX: root menu uses group_mlm_manager instead of plain salesman -->
     <menuitem id="menu_mlm_affiliate_root"
               name="MLM Affiliate"
               sequence="85"
               web_icon="mlm_affiliate,static/description/icon.png"
-              groups="sales_team.group_sale_salesman"/>
+              groups="mlm_affiliate.group_mlm_manager"/>
 
     <!-- Commissions -->
     <menuitem id="menu_mlm_commissions"
@@ -34,14 +35,21 @@
               action="action_affiliate_partners"
               sequence="10"/>
 
-    <!-- Configuration -->
+    <!-- FEATURE: Leaderboard menu -->
+    <menuitem id="menu_mlm_leaderboard"
+              name="Leaderboard"
+              parent="menu_mlm_network"
+              action="action_mlm_leaderboard"
+              sequence="20"/>
+
+    <!-- Configuration — FIX: uses group_mlm_manager -->
     <menuitem id="menu_mlm_config"
               name="Configuration"
               parent="menu_mlm_affiliate_root"
               sequence="30"
-              groups="sales_team.group_sale_salesman_all_leads"/>
+              groups="mlm_affiliate.group_mlm_manager"/>
     <menuitem id="menu_mlm_commission_rules"
-              name="Product Commission Rules"
+              name="Commission Rules"
               parent="menu_mlm_config"
               action="action_product_commission_rule"
               sequence="10"/>
@@ -50,5 +58,12 @@
               parent="menu_mlm_config"
               action="action_mlm_level_rate"
               sequence="20"/>
+
+    <!-- FEATURE: Tier management menu -->
+    <menuitem id="menu_mlm_affiliate_tiers"
+              name="Affiliate Tiers"
+              parent="menu_mlm_config"
+              action="action_mlm_affiliate_tier"
+              sequence="30"/>
 
 </odoo>

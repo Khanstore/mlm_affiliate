@@ -6,83 +6,97 @@ from odoo import models, fields, api
 class ResPartner(models.Model):
     _inherit = 'res.partner'
 
-    # ── Affiliate Identity ──────────────────────────────────────────────────
-    referral_code = fields.Char(
-        string='Referral Code',
-        copy=False,
-        index=True,
-        help='Unique code used in referral links: /ref/<code>',
-    )
-    is_affiliate = fields.Boolean(
-        string='Is Affiliate / Referrer',
-        default=False,
-        help='Enable to allow this partner to generate referral links and earn commissions.',
-    )
-    upline_partner_id = fields.Many2one(
-        'res.partner',
-        string='Referred By (Upline)',
-        index=True,
-        help='The partner who referred this person. Defines the MLM upline chain.',
-    )
-    downline_ids = fields.One2many(
-        'res.partner',
-        'upline_partner_id',
-        string='Direct Downline',
-    )
-    downline_count = fields.Integer(
-        string='Direct Referrals',
-        compute='_compute_downline_count',
+    # ── Affiliate identity ────────────────────────────────────────────────────
+    referral_code = fields.Char(string='Referral Code', copy=False, index=True)
+    is_affiliate = fields.Boolean(string='Is Affiliate / Referrer', default=False)
+    upline_partner_id = fields.Many2one('res.partner', string='Referred By (Upline)', index=True)
+    downline_ids = fields.One2many('res.partner', 'upline_partner_id', string='Direct Downline')
+    downline_count = fields.Integer(string='Direct Referrals', compute='_compute_downline_count')
+
+    # FEATURE: Affiliate tier
+    tier_id = fields.Many2one(
+        'mlm.affiliate.tier', string='Affiliate Tier',
+        help='Auto-assigned based on earnings and referral count.',
     )
 
-    # ── Wallet / Earnings ───────────────────────────────────────────────────
+    # FEATURE: Bank account for payouts
+    affiliate_bank_account = fields.Char(
+        string='Bank / Payout Account',
+        help='IBAN, account number, or mobile wallet number for bank transfer payouts.',
+    )
+
+    # FEATURE: Referral link click tracking
+    referral_click_count = fields.Integer(
+        string='Link Clicks', default=0,
+        help='Number of times the referral link has been visited.',
+    )
+    referral_last_click = fields.Datetime(string='Last Click')
+
+    # ── Wallet ────────────────────────────────────────────────────────────────
     affiliate_wallet_balance = fields.Float(
         string='Wallet Balance',
         compute='_compute_wallet_balance',
-        store=True,
-        digits=(16, 2),
-        help='Approved wallet commissions minus paid-out wallet commissions.',
+        store=True, digits=(16, 2),
     )
-    commission_ids = fields.One2many(
-        'mlm.commission',
-        'partner_id',
-        string='Commissions',
-    )
+    commission_ids = fields.One2many('mlm.commission', 'partner_id', string='Commissions')
     total_commission_earned = fields.Float(
         string='Total Earned (All Time)',
         compute='_compute_total_commission_earned',
         digits=(16, 2),
     )
-
-    # ── Referral URL helper (non-stored) ────────────────────────────────────
-    referral_url = fields.Char(
-        string='Referral Link',
-        compute='_compute_referral_url',
+    wallet_order_ids = fields.One2many(
+        'sale.order', 'wallet_partner_id', string='Wallet Orders',
+        domain=[('state', 'in', ['sale', 'done'])],
     )
+    referral_url = fields.Char(string='Referral Link', compute='_compute_referral_url')
 
-    # ───────────────────────────────────────────────────────────────────────
-    # Computes
-    # ───────────────────────────────────────────────────────────────────────
+    # ── Computes ──────────────────────────────────────────────────────────────
 
-    @api.depends('commission_ids.state', 'commission_ids.amount', 'commission_ids.payout_method')
+    @api.depends(
+        'commission_ids.state', 'commission_ids.amount', 'commission_ids.payout_method',
+        'wallet_order_ids.wallet_amount_used', 'wallet_order_ids.state',
+    )
     def _compute_wallet_balance(self):
+        """
+        FIX (N+1): fetch all wallet orders for the entire batch in one query,
+        group by wallet_partner_id, then look up amounts by partner id.
+        """
+        Order = self.env['sale.order'].sudo()
+        partner_ids = self.ids
+        if not partner_ids:
+            return
+
+        # One query for the whole recordset
+        wallet_orders = Order.search([
+            ('wallet_partner_id', 'in', partner_ids),
+            ('state', 'in', ['sale', 'done']),
+        ])
+        # Build a dict: partner_id → total spent
+        spent_by_partner = {}
+        for wo in wallet_orders:
+            pid = wo.wallet_partner_id.id
+            spent_by_partner[pid] = spent_by_partner.get(pid, 0.0) + wo.wallet_amount_used
+
         for partner in self:
-            approved = partner.commission_ids.filtered(
-                lambda c: c.state == 'approved' and c.payout_method == 'wallet'
+            comms = partner.commission_ids
+            approved = sum(
+                c.amount for c in comms
+                if c.state == 'approved' and c.payout_method == 'wallet'
             )
-            paid = partner.commission_ids.filtered(
-                lambda c: c.state == 'paid' and c.payout_method == 'wallet'
+            paid_out = sum(
+                c.amount for c in comms
+                if c.state == 'paid' and c.payout_method == 'wallet'
             )
-            partner.affiliate_wallet_balance = (
-                sum(approved.mapped('amount')) - sum(paid.mapped('amount'))
-            )
+            wallet_spent = spent_by_partner.get(partner.id, 0.0)
+            partner.affiliate_wallet_balance = approved - paid_out - wallet_spent
 
     @api.depends('commission_ids.state', 'commission_ids.amount')
     def _compute_total_commission_earned(self):
         for partner in self:
-            earned = partner.commission_ids.filtered(
-                lambda c: c.state in ('approved', 'paid')
+            partner.total_commission_earned = sum(
+                c.amount for c in partner.commission_ids
+                if c.state in ('approved', 'paid')
             )
-            partner.total_commission_earned = sum(earned.mapped('amount'))
 
     @api.depends('downline_ids')
     def _compute_downline_count(self):
@@ -91,19 +105,40 @@ class ResPartner(models.Model):
 
     @api.depends('referral_code')
     def _compute_referral_url(self):
-        base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url', '')
+        base_url = (
+            self.env['ir.config_parameter'].sudo()
+            .get_param('web.base.url', '').rstrip('/')
+        )
         for partner in self:
             if partner.referral_code:
                 partner.referral_url = f"{base_url}/ref/{partner.referral_code}"
             else:
                 partner.referral_url = ''
 
-    # ───────────────────────────────────────────────────────────────────────
-    # Helpers
-    # ───────────────────────────────────────────────────────────────────────
+    # ── Tier auto-assignment ──────────────────────────────────────────────────
+
+    def action_update_tier(self):
+        """Assign the highest tier the partner qualifies for."""
+        tiers = self.env['mlm.affiliate.tier'].sudo().search(
+            [('active', '=', True)], order='min_earned desc'
+        )
+        for partner in self:
+            if not partner.is_affiliate:
+                continue
+            earned = partner.total_commission_earned
+            referrals = partner.downline_count
+            assigned = False
+            for tier in tiers:
+                if earned >= tier.min_earned and referrals >= tier.min_referrals:
+                    partner.tier_id = tier
+                    assigned = True
+                    break
+            if not assigned:
+                partner.tier_id = False
+
+    # ── Helpers ───────────────────────────────────────────────────────────────
 
     def _generate_referral_code(self):
-        """Generate a unique 8-character alphanumeric referral code."""
         chars = string.ascii_uppercase + string.digits
         while True:
             code = ''.join(random.choices(chars, k=8))
@@ -111,7 +146,6 @@ class ResPartner(models.Model):
                 return code
 
     def action_generate_referral_code(self):
-        """Button: generate referral code if not already set."""
         for partner in self:
             if not partner.referral_code:
                 partner.referral_code = partner._generate_referral_code()
@@ -127,9 +161,7 @@ class ResPartner(models.Model):
             'context': {'default_partner_id': self.id},
         }
 
-    # ───────────────────────────────────────────────────────────────────────
-    # ORM overrides
-    # ───────────────────────────────────────────────────────────────────────
+    # ── ORM overrides ─────────────────────────────────────────────────────────
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -141,7 +173,6 @@ class ResPartner(models.Model):
 
     def write(self, vals):
         res = super().write(vals)
-        # Auto-generate code when affiliate flag is turned on
         if vals.get('is_affiliate'):
             for partner in self:
                 if not partner.referral_code:

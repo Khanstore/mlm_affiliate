@@ -1,11 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-
-    <!--
-        Odoo 18: inherit the actual form view (res_config_settings_view_form),
-        NOT the action (action_general_configuration).
-        Append our <app> block inside the <form> root — safest xpath.
-    -->
     <record id="view_res_config_settings_mlm" model="ir.ui.view">
         <field name="name">res.config.settings.mlm.affiliate</field>
         <field name="model">res.config.settings</field>
@@ -14,15 +8,25 @@
             <xpath expr="//form" position="inside">
                 <app string="MLM Affiliate" name="mlm_affiliate">
                     <block title="Commission Settings">
-                        <setting
-                            string="Admin Account (Unallocated Commissions)"
-                            help="This partner receives commission portions for any MLM level that has no upline partner in the referral chain.">
+                        <setting string="Admin Account (Unallocated Commissions)"
+                                 help="Receives commission for any MLM level with no upline partner.">
                             <field name="mlm_admin_partner_id"/>
+                        </setting>
+                        <!-- FEATURE: minimum payout threshold -->
+                        <setting string="Minimum Payout Amount"
+                                 help="Commissions below this amount cannot be marked as Paid. Set to 0 to disable.">
+                            <field name="mlm_min_payout_threshold"/>
+                        </setting>
+                    </block>
+                    <block title="Email Notifications">
+                        <!-- FEATURE: toggle monthly summary emails -->
+                        <setting string="Send Monthly Summary Emails"
+                                 help="Automatically email every active affiliate a monthly earnings summary.">
+                            <field name="mlm_send_monthly_summary"/>
                         </setting>
                     </block>
                 </app>
             </xpath>
         </field>
     </record>
-
 </odoo>

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_mlm_affiliate_tier_list" model="ir.ui.view">
+        <field name="name">mlm.affiliate.tier.list</field>
+        <field name="model">mlm.affiliate.tier</field>
+        <field name="arch" type="xml">
+            <list string="Affiliate Tiers" editable="top">
+                <field name="name"/>
+                <field name="min_earned" string="Min. Earned"/>
+                <field name="min_referrals" string="Min. Referrals"/>
+                <field name="commission_multiplier" string="Multiplier"/>
+                <field name="partner_count" string="Affiliates" readonly="1"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_mlm_affiliate_tier_form" model="ir.ui.view">
+        <field name="name">mlm.affiliate.tier.form</field>
+        <field name="model">mlm.affiliate.tier</field>
+        <field name="arch" type="xml">
+            <form string="Affiliate Tier">
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button type="object" name="action_view_tier_partners"
+                                class="oe_stat_button" icon="fa-users">
+                            <field name="partner_count" widget="statinfo" string="Affiliates"/>
+                        </button>
+                    </div>
+                    <group>
+                        <group string="Tier Identity">
+                            <field name="name"/>
+                            <field name="description"/>
+                            <field name="active"/>
+                        </group>
+                        <group string="Qualification Thresholds">
+                            <field name="min_earned"/>
+                            <field name="min_referrals"/>
+                        </group>
+                        <group string="Rewards">
+                            <field name="commission_multiplier"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_mlm_affiliate_tier" model="ir.actions.act_window">
+        <field name="name">Affiliate Tiers</field>
+        <field name="res_model">mlm.affiliate.tier</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Create your first tier!</p>
+            <p>Define Bronze, Silver, Gold tiers with earning thresholds and commission multipliers.</p>
+        </field>
+    </record>
+
+</odoo>

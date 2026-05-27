@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- ── List ───────────────────────────────────────────────────────── -->
+    <!-- ── List view ──────────────────────────────────────────────────── -->
     <record id="view_mlm_commission_list" model="ir.ui.view">
         <field name="name">mlm.commission.list</field>
         <field name="model">mlm.commission</field>
@@ -15,14 +15,13 @@
                 <field name="order_date"/>
                 <field name="partner_id" string="Earner"/>
                 <field name="level"/>
-                <field name="level_rate" string="Level Rate (%)"/>
+                <field name="level_rate"       string="Rate (%)" optional="show"/>
                 <field name="total_commission" string="Total Pot" optional="show"/>
-                <field name="amount" string="Earned" sum="Total Earned"/>
-                <field name="currency_id" column_invisible="1"/>
                 <field name="product_id"/>
                 <field name="buyer_partner_id" optional="show"/>
-                <field name="is_l1_split" string="L1 Split" optional="show"/>
-                <field name="split_partner_id" string="Split With" optional="show"/>
+                <field name="amount"           sum="Total Earned"/>
+                <field name="currency_id"      column_invisible="1"/>
+                <field name="is_l1_split"      string="Split" optional="show"/>
                 <field name="is_admin_allocation" string="Admin" optional="show"/>
                 <field name="payout_method"/>
                 <field name="state"
@@ -43,7 +42,7 @@
         </field>
     </record>
 
-    <!-- ── Form ───────────────────────────────────────────────────────── -->
+    <!-- ── Form view ──────────────────────────────────────────────────── -->
     <record id="view_mlm_commission_form" model="ir.ui.view">
         <field name="name">mlm.commission.form</field>
         <field name="model">mlm.commission</field>
@@ -75,10 +74,8 @@
                          invisible="not is_l1_split">
                         <i class="fa fa-info-circle me-1" title="Info"/>
                         <strong>Level 1 Split Commission:</strong>
-                        The buyer already had an existing upline partner.
-                        The Level-1 commission was shared equally (50 / 50) between
-                        <strong><field name="partner_id" readonly="1"/></strong>
-                        and
+                        The buyer already had an existing upline. The L1 commission
+                        was shared 50/50 with
                         <strong><field name="split_partner_id" readonly="1"/></strong>.
                     </div>
 
@@ -87,22 +84,20 @@
                          invisible="not is_admin_allocation">
                         <i class="fa fa-exclamation-triangle me-1" title="Warning"/>
                         <strong>Admin Allocation:</strong>
-                        This commission was redirected to the admin account
-                        because Level <field name="level" readonly="1"/>
-                        had no upline partner in the referral chain.
+                        Level <field name="level" readonly="1"/> had no upline partner —
+                        redirected to the admin account.
                     </div>
 
                     <group>
                         <group string="Earning Details">
                             <field name="partner_id"/>
                             <field name="level"/>
-                            <field name="level_rate" string="Level Rate (%)"/>
+                            <field name="level_rate"       string="Level Rate (%)"/>
                             <field name="total_commission" string="Total Commission Pot"/>
-                            <field name="amount" string="Amount Earned"/>
+                            <field name="amount"           string="Amount Earned"/>
                             <field name="currency_id"/>
                             <field name="is_l1_split"/>
-                            <field name="split_partner_id"
-                                   invisible="not is_l1_split"/>
+                            <field name="split_partner_id"    invisible="not is_l1_split"/>
                             <field name="is_admin_allocation"/>
                         </group>
                         <group string="Sale Info">
@@ -127,7 +122,7 @@
         </field>
     </record>
 
-    <!-- ── Search ─────────────────────────────────────────────────────── -->
+    <!-- ── Search view ────────────────────────────────────────────────── -->
     <record id="view_mlm_commission_search" model="ir.ui.view">
         <field name="name">mlm.commission.search</field>
         <field name="model">mlm.commission</field>
@@ -138,30 +133,45 @@
                 <field name="order_id"/>
                 <field name="product_id"/>
                 <separator/>
-                <filter name="pending"     string="Pending"          domain="[('state','=','pending')]"/>
-                <filter name="approved"    string="Approved"         domain="[('state','=','approved')]"/>
-                <filter name="paid"        string="Paid"             domain="[('state','=','paid')]"/>
-                <filter name="cancelled"   string="Cancelled"        domain="[('state','=','cancelled')]"/>
+                <filter name="pending"     string="Pending"
+                        domain="[('state','=','pending')]"/>
+                <filter name="approved"    string="Approved"
+                        domain="[('state','=','approved')]"/>
+                <filter name="paid"        string="Paid"
+                        domain="[('state','=','paid')]"/>
+                <filter name="cancelled"   string="Cancelled"
+                        domain="[('state','=','cancelled')]"/>
                 <separator/>
-                <filter name="l1_split"    string="L1 Split"         domain="[('is_l1_split','=',True)]"/>
-                <filter name="admin_alloc" string="Admin Alloc."     domain="[('is_admin_allocation','=',True)]"/>
-                <filter name="normal"      string="Normal"           domain="[('is_l1_split','=',False),('is_admin_allocation','=',False)]"/>
+                <filter name="l1_split"    string="L1 Split"
+                        domain="[('is_l1_split','=',True)]"/>
+                <filter name="admin_alloc" string="Admin Alloc."
+                        domain="[('is_admin_allocation','=',True)]"/>
                 <separator/>
-                <filter name="wallet"      string="Wallet"           domain="[('payout_method','=','wallet')]"/>
-                <filter name="bank"        string="Bank"             domain="[('payout_method','=','bank')]"/>
-                <filter name="discount"    string="Discount"         domain="[('payout_method','=','discount')]"/>
+                <filter name="wallet"      string="Wallet"
+                        domain="[('payout_method','=','wallet')]"/>
+                <filter name="bank"        string="Bank"
+                        domain="[('payout_method','=','bank')]"/>
+                <filter name="discount"    string="Discount"
+                        domain="[('payout_method','=','discount')]"/>
                 <group expand="0" string="Group By">
-                    <filter name="by_earner"  string="Earner"   context="{'group_by':'partner_id'}"/>
-                    <filter name="by_level"   string="Level"    context="{'group_by':'level'}"/>
-                    <filter name="by_product" string="Product"  context="{'group_by':'product_id'}"/>
-                    <filter name="by_state"   string="Status"   context="{'group_by':'state'}"/>
-                    <filter name="by_month"   string="Month"    context="{'group_by':'order_date:month'}"/>
+                    <filter name="by_earner"  string="Earner"
+                            context="{'group_by':'partner_id'}"/>
+                    <filter name="by_level"   string="Level"
+                            context="{'group_by':'level'}"/>
+                    <filter name="by_product" string="Product"
+                            context="{'group_by':'product_id'}"/>
+                    <filter name="by_state"   string="Status"
+                            context="{'group_by':'state'}"/>
+                    <filter name="by_month"   string="Month"
+                            context="{'group_by':'order_date:month'}"/>
+                    <filter name="by_payout"  string="Payout Method"
+                            context="{'group_by':'payout_method'}"/>
                 </group>
             </search>
         </field>
     </record>
 
-    <!-- ── Graph ──────────────────────────────────────────────────────── -->
+    <!-- ── Graph view ─────────────────────────────────────────────────── -->
     <record id="view_mlm_commission_graph" model="ir.ui.view">
         <field name="name">mlm.commission.graph</field>
         <field name="model">mlm.commission</field>
@@ -173,7 +183,7 @@
         </field>
     </record>
 
-    <!-- ── Pivot ──────────────────────────────────────────────────────── -->
+    <!-- ── Pivot view ─────────────────────────────────────────────────── -->
     <record id="view_mlm_commission_pivot" model="ir.ui.view">
         <field name="name">mlm.commission.pivot</field>
         <field name="model">mlm.commission</field>
@@ -194,7 +204,8 @@
         <field name="search_view_id" ref="view_mlm_commission_search"/>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">No commissions yet!</p>
-            <p>Commissions are created automatically when a referred sale order is confirmed.</p>
+            <p>Commissions are created automatically when a referred
+               sale order is confirmed.</p>
         </field>
     </record>
 
