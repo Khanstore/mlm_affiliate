@@ -8,3 +8,6 @@ from . import product_commission_rule
 from . import product_template
 from . import sale_order
 from . import account_move
+from . import mlm_payout_request
+from . import mlm_campaign
+from . import mlm_milestone

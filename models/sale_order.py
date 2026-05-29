@@ -12,8 +12,7 @@ class SaleOrder(models.Model):
     total_commission_amount = fields.Float(compute='_compute_commission_stats',
         string='Total Commissions', digits=(16, 2))
 
-    wallet_amount_used = fields.Float(string='Wallet Amount Used', default=0.0,
-        digits=(16, 2))
+    wallet_amount_used = fields.Float(string='Wallet Amount Used', default=0.0, digits=(16, 2))
     wallet_partner_id = fields.Many2one('res.partner', string='Wallet Owner', index=True)
 
     @api.depends('commission_ids', 'commission_ids.amount')
@@ -47,6 +46,9 @@ class SaleOrder(models.Model):
         )
         if not partner or partner == self.partner_id:
             return
+        # Only approved affiliates generate commissions
+        if partner.affiliate_status != 'approved':
+            return
         self.sudo().write({
             'referrer_partner_id': partner.id,
             'referral_code_used': ref_code,
@@ -61,7 +63,6 @@ class SaleOrder(models.Model):
                 order._generate_mlm_commissions()
         return res
 
-    # FIX: cancel pending/approved commissions when the order is cancelled
     def action_cancel(self):
         res = super().action_cancel()
         for order in self:
@@ -80,6 +81,7 @@ class SaleOrder(models.Model):
         LevelRate  = self.env['mlm.level.rate'].sudo()
         Commission = self.env['mlm.commission'].sudo()
         RuleModel  = self.env['product.commission.rule'].sudo()
+        CampaignModel = self.env['mlm.campaign'].sudo()
 
         level_rates = LevelRate.search([('active', '=', True)], order='level')
         if not level_rates:
@@ -111,6 +113,10 @@ class SaleOrder(models.Model):
             upline_chain.append(current)
             current = current.upline_partner_id
 
+        # Self-referral check: referrer must not be the buyer
+        if referrer.id == buyer.id:
+            return
+
         for line in self.order_line:
             if not line.product_id or line.price_subtotal <= 0:
                 continue
@@ -128,18 +134,30 @@ class SaleOrder(models.Model):
 
                 if lr.level == 1 and do_l1_split:
                     half = round(level_amount / 2, 2)
-                    base = {
-                        'order_id': self.id, 'order_line_id': line.id,
-                        'product_id': line.product_id.id,
-                        'buyer_partner_id': buyer.id, 'level': 1,
-                        'level_rate': lr.rate, 'total_commission': total_pot,
-                        'amount': half, 'is_l1_split': True,
-                        'state': 'pending', 'payout_method': 'wallet',
-                    }
-                    Commission.create({**base, 'partner_id': referrer.id,
-                                       'split_partner_id': buyer_upline.id})
-                    Commission.create({**base, 'partner_id': buyer_upline.id,
-                                       'split_partner_id': referrer.id})
+                    for recipient, split_with in [
+                        (referrer, buyer_upline),
+                        (buyer_upline, referrer),
+                    ]:
+                        # Apply campaign multiplier per recipient
+                        campaign = CampaignModel.get_active_campaign(recipient.id)
+                        multiplier = campaign.commission_multiplier if campaign else 1.0
+                        final_amount = round(half * multiplier, 2)
+                        Commission.create({
+                            'partner_id': recipient.id,
+                            'split_partner_id': split_with.id,
+                            'order_id': self.id,
+                            'order_line_id': line.id,
+                            'product_id': line.product_id.id,
+                            'buyer_partner_id': buyer.id,
+                            'level': 1,
+                            'level_rate': lr.rate,
+                            'total_commission': total_pot,
+                            'amount': final_amount,
+                            'campaign_multiplier': multiplier,
+                            'is_l1_split': True,
+                            'state': 'pending',
+                            'payout_method': 'wallet',
+                        })
                 else:
                     chain_idx = lr.level - 1
                     if chain_idx < len(upline_chain):
@@ -150,13 +168,23 @@ class SaleOrder(models.Model):
                             continue
                         recipient = admin_partner
                         is_admin  = True
+                    campaign = CampaignModel.get_active_campaign(recipient.id)
+                    multiplier = campaign.commission_multiplier if campaign else 1.0
+                    final_amount = round(level_amount * multiplier, 2)
                     Commission.create({
-                        'partner_id': recipient.id, 'order_id': self.id,
-                        'order_line_id': line.id, 'product_id': line.product_id.id,
-                        'buyer_partner_id': buyer.id, 'level': lr.level,
-                        'level_rate': lr.rate, 'total_commission': total_pot,
-                        'amount': level_amount, 'is_admin_allocation': is_admin,
-                        'state': 'pending', 'payout_method': 'wallet',
+                        'partner_id': recipient.id,
+                        'order_id': self.id,
+                        'order_line_id': line.id,
+                        'product_id': line.product_id.id,
+                        'buyer_partner_id': buyer.id,
+                        'level': lr.level,
+                        'level_rate': lr.rate,
+                        'total_commission': total_pot,
+                        'amount': final_amount,
+                        'campaign_multiplier': multiplier,
+                        'is_admin_allocation': is_admin,
+                        'state': 'pending',
+                        'payout_method': 'wallet',
                     })
 
     def action_view_mlm_commissions(self):

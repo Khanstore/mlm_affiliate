@@ -24,7 +24,6 @@
                         <span class="o_stat_text">Downline</span>
                     </div>
                 </button>
-                <!-- FEATURE: click counter smart button -->
                 <button type="object" name="action_view_mlm_commissions"
                         class="oe_stat_button" icon="fa-mouse-pointer"
                         invisible="referral_click_count == 0">
@@ -37,6 +36,22 @@
 
             <xpath expr="//notebook" position="inside">
                 <page string="Affiliate / MLM" name="mlm_affiliate">
+                    <!-- Application status bar -->
+                    <div class="d-flex align-items-center gap-2 mb-3"
+                         invisible="not is_affiliate">
+                        <span class="fw-semibold text-muted small">Application Status:</span>
+                        <field name="affiliate_status" widget="badge"
+                               decoration-warning="affiliate_status == 'pending'"
+                               decoration-success="affiliate_status == 'approved'"
+                               decoration-danger="affiliate_status == 'rejected'"/>
+                        <button name="action_approve_affiliate" type="object"
+                                string="Approve" class="btn btn-success btn-sm"
+                                invisible="affiliate_status == 'approved'"/>
+                        <button name="action_reject_affiliate" type="object"
+                                string="Reject" class="btn btn-danger btn-sm"
+                                invisible="affiliate_status == 'rejected'"/>
+                    </div>
+
                     <group>
                         <group string="Affiliate Settings">
                             <field name="is_affiliate"/>
@@ -46,7 +61,6 @@
                                     string="Generate Referral Code"
                                     class="btn btn-secondary btn-sm"
                                     invisible="referral_code"/>
-                            <!-- FEATURE: tier field -->
                             <field name="tier_id"/>
                             <button name="action_update_tier" type="object"
                                     string="Re-evaluate Tier"
@@ -56,14 +70,12 @@
                         <group string="MLM Chain &amp; Wallet">
                             <field name="upline_partner_id"/>
                             <field name="affiliate_wallet_balance"/>
-                            <!-- FEATURE: bank account -->
                             <field name="affiliate_bank_account"
                                    placeholder="IBAN / account number / mobile wallet"/>
                         </group>
                     </group>
                     <group string="Referral Link Analytics">
                         <group>
-                            <!-- FEATURE: click tracking fields -->
                             <field name="referral_click_count" string="Total Link Clicks"/>
                             <field name="referral_last_click" string="Last Click"/>
                         </group>
@@ -76,6 +88,7 @@
                             <field name="referral_code"/>
                             <field name="is_affiliate"/>
                             <field name="tier_id"/>
+                            <field name="affiliate_status"/>
                         </list>
                     </field>
                 </page>
@@ -88,17 +101,25 @@
         <field name="name">res.partner.affiliate.list</field>
         <field name="model">res.partner</field>
         <field name="arch" type="xml">
-            <list string="Affiliates">
+            <list string="Affiliates"
+                  decoration-warning="affiliate_status == 'pending'"
+                  decoration-muted="affiliate_status == 'rejected'">
                 <field name="name"/>
                 <field name="email"/>
                 <field name="referral_code"/>
                 <field name="tier_id" string="Tier"/>
+                <field name="affiliate_status" widget="badge"
+                       decoration-warning="affiliate_status == 'pending'"
+                       decoration-success="affiliate_status == 'approved'"
+                       decoration-danger="affiliate_status == 'rejected'"/>
                 <field name="upline_partner_id"/>
                 <field name="downline_count"           string="Direct Referrals"/>
                 <field name="referral_click_count"     string="Link Clicks"/>
                 <field name="affiliate_wallet_balance" string="Wallet Balance"/>
                 <field name="total_commission_earned"  string="Total Earned"/>
-                <field name="is_affiliate"/>
+                <button name="action_approve_affiliate" type="object"
+                        string="Approve" icon="fa-check" class="btn-success btn-sm"
+                        invisible="affiliate_status == 'approved'"/>
             </list>
         </field>
     </record>
@@ -115,6 +136,15 @@
             <p>Open any contact, go to the <strong>Affiliate / MLM</strong> tab,
                tick <strong>Is Affiliate</strong>, and generate a referral code.</p>
         </field>
+    </record>
+
+    <!-- Pending affiliates quick action -->
+    <record id="action_affiliate_partners_pending" model="ir.actions.act_window">
+        <field name="name">Pending Affiliate Applications</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_affiliate_partner_list"/>
+        <field name="domain">[('is_affiliate', '=', True), ('affiliate_status', '=', 'pending')]</field>
     </record>
 
 </odoo>

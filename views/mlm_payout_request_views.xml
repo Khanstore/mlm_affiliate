@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_mlm_payout_request_list" model="ir.ui.view">
+        <field name="name">mlm.payout.request.list</field>
+        <field name="model">mlm.payout.request</field>
+        <field name="arch" type="xml">
+            <list string="Payout Requests"
+                  decoration-warning="state == 'draft'"
+                  decoration-success="state == 'paid'"
+                  decoration-info="state == 'approved'"
+                  decoration-muted="state == 'rejected'">
+                <field name="name"/>
+                <field name="create_date" string="Submitted"/>
+                <field name="partner_id" string="Affiliate"/>
+                <field name="amount_requested" sum="Total"/>
+                <field name="payout_method"/>
+                <field name="bank_account" optional="show"/>
+                <field name="state" widget="badge"
+                       decoration-warning="state == 'draft'"
+                       decoration-info="state == 'approved'"
+                       decoration-success="state == 'paid'"
+                       decoration-danger="state == 'rejected'"/>
+                <button name="action_approve" type="object"
+                        string="Approve" icon="fa-check"
+                        class="btn-success btn-sm"
+                        invisible="state != 'draft'"/>
+                <button name="action_pay" type="object"
+                        string="Mark Paid" icon="fa-money"
+                        class="btn-primary btn-sm"
+                        invisible="state != 'approved'"/>
+                <button name="action_reject" type="object"
+                        string="Reject" icon="fa-times"
+                        class="btn-danger btn-sm"
+                        invisible="state in ('paid', 'rejected')"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_mlm_payout_request_form" model="ir.ui.view">
+        <field name="name">mlm.payout.request.form</field>
+        <field name="model">mlm.payout.request</field>
+        <field name="arch" type="xml">
+            <form string="Payout Request">
+                <header>
+                    <button name="action_approve" type="object"
+                            string="Approve" class="btn-success"
+                            invisible="state != 'draft'"/>
+                    <button name="action_pay" type="object"
+                            string="Mark as Paid" class="btn-primary"
+                            invisible="state != 'approved'"/>
+                    <button name="action_reject" type="object"
+                            string="Reject" class="btn-danger"
+                            invisible="state in ('paid', 'rejected')"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,approved,paid"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Request Details">
+                            <field name="partner_id"/>
+                            <field name="amount_requested"/>
+                            <field name="payout_method"/>
+                            <field name="bank_account"
+                                   invisible="payout_method != 'bank'"/>
+                        </group>
+                        <group string="Notes">
+                            <field name="note" nolabel="1" placeholder="Affiliate note…"/>
+                            <field name="admin_note" nolabel="1" placeholder="Admin note…"/>
+                        </group>
+                    </group>
+                    <separator string="Commissions Included"/>
+                    <field name="commission_ids">
+                        <list>
+                            <field name="name"/>
+                            <field name="order_id"/>
+                            <field name="amount" sum="Total"/>
+                            <field name="state" widget="badge"/>
+                        </list>
+                    </field>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_mlm_payout_request" model="ir.actions.act_window">
+        <field name="name">Payout Requests</field>
+        <field name="res_model">mlm.payout.request</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No payout requests yet!</p>
+            <p>Affiliates submit payout requests from their dashboard.</p>
+        </field>
+    </record>
+
+    <record id="action_mlm_payout_request_pending" model="ir.actions.act_window">
+        <field name="name">Pending Payout Requests</field>
+        <field name="res_model">mlm.payout.request</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('state', '=', 'draft')]</field>
+    </record>
+
+</odoo>

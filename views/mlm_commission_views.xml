@@ -20,9 +20,12 @@
                 <field name="product_id"/>
                 <field name="buyer_partner_id" optional="show"/>
                 <field name="amount"           sum="Total Earned"/>
+                <field name="campaign_multiplier" string="Campaign ×" optional="show"/>
                 <field name="currency_id"      column_invisible="1"/>
+                <field name="hold_until"       optional="show"/>
                 <field name="is_l1_split"      string="Split" optional="show"/>
                 <field name="is_admin_allocation" string="Admin" optional="show"/>
+                <field name="is_milestone_bonus" string="Milestone" optional="show"/>
                 <field name="payout_method"/>
                 <field name="state"
                        widget="badge"
@@ -69,6 +72,14 @@
                         <h1><field name="name" readonly="1"/></h1>
                     </div>
 
+                    <!-- Hold notice -->
+                    <div class="alert alert-warning mb-3" role="alert"
+                         invisible="not hold_until">
+                        <i class="fa fa-clock-o me-1" title="Hold"/>
+                        <strong>Commission on hold until <field name="hold_until" readonly="1"/>.</strong>
+                        This commission will be auto-approved once the hold period expires.
+                    </div>
+
                     <!-- L1 Split notice -->
                     <div class="alert alert-info mb-3" role="alert"
                          invisible="not is_l1_split">
@@ -88,6 +99,13 @@
                         redirected to the admin account.
                     </div>
 
+                    <!-- Milestone bonus notice -->
+                    <div class="alert alert-success mb-3" role="alert"
+                         invisible="not is_milestone_bonus">
+                        <i class="fa fa-trophy me-1" title="Milestone"/>
+                        <strong>Milestone Bonus Commission</strong>
+                    </div>
+
                     <group>
                         <group string="Earning Details">
                             <field name="partner_id"/>
@@ -95,10 +113,13 @@
                             <field name="level_rate"       string="Level Rate (%)"/>
                             <field name="total_commission" string="Total Commission Pot"/>
                             <field name="amount"           string="Amount Earned"/>
+                            <field name="campaign_multiplier" string="Campaign Multiplier"/>
                             <field name="currency_id"/>
+                            <field name="hold_until"/>
                             <field name="is_l1_split"/>
                             <field name="split_partner_id"    invisible="not is_l1_split"/>
                             <field name="is_admin_allocation"/>
+                            <field name="is_milestone_bonus"/>
                         </group>
                         <group string="Sale Info">
                             <field name="order_id"/>
@@ -112,6 +133,10 @@
                         <field name="payout_method"/>
                         <field name="coupon_code"
                                invisible="payout_method != 'discount'"/>
+                    </group>
+                    <group string="Accounting">
+                        <field name="account_move_id" readonly="1"
+                               invisible="not account_move_id"/>
                     </group>
                     <group string="Notes">
                         <field name="note" nolabel="1"/>
@@ -142,6 +167,10 @@
                 <filter name="cancelled"   string="Cancelled"
                         domain="[('state','=','cancelled')]"/>
                 <separator/>
+                <filter name="on_hold"     string="On Hold"
+                        domain="[('hold_until', '&gt;', current_date)]"/>
+                <filter name="milestone"   string="Milestone Bonuses"
+                        domain="[('is_milestone_bonus','=',True)]"/>
                 <filter name="l1_split"    string="L1 Split"
                         domain="[('is_l1_split','=',True)]"/>
                 <filter name="admin_alloc" string="Admin Alloc."

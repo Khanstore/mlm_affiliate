@@ -1,51 +1,72 @@
 {
-    'name': 'MLM Affiliate Referral',
-    'version': '18.0.4.0.0',
-    'category': 'Website/eCommerce',
-    'summary': 'Multi-level affiliate referral commissions for Odoo 18 eCommerce',
-    'author': 'Custom Development',
+    'name': 'MLM Affiliate',
+    'version': '18.0.2.1.0',
+    'category': 'Sales/Affiliate',
+    'summary': 'Multi-level affiliate commissions with wallet, accounting, campaigns, milestones and fraud protection.',
+    'description': """
+MLM Affiliate Module — Odoo 18
+==============================
+Features:
+- Multi-level commission engine with pricelist-based rules
+- Commission auto-approval on invoice payment
+- Refund clawback: commissions cancelled on validated credit notes
+- Commission hold period (configurable return/refund window)
+- Self-referral prevention and affiliate application approval flow
+- Affiliate wallet: balance usable to pay online orders at checkout
+- Payout request workflow (portal submission + admin approve/pay)
+- Accounting integration: approved commissions create expense journal entries
+  (Debit: MLM Commission Expense / Credit: MLM Commissions Payable)
+- Campaign/promo codes with boosted commission multipliers per affiliate
+- Milestone bonuses: automatic one-time rewards on earnings/referral thresholds
+- Affiliate tiers auto-assigned by earnings + referral count
+- Monthly earnings trend chart on affiliate portal
+- Leaderboard (top 10 affiliates)
+- Downline tree view
+- Referral link click tracking + QR code
+- Monthly summary emails (toggleable)
+    """,
+    'author': 'Custom',
     'depends': [
-        'website_sale',
         'sale_management',
         'account',
+        'website_sale',
         'portal',
-        'mail',
         'auth_signup',
+        'mail',
         'base_setup',
     ],
     'data': [
+        # Security
         'security/mlm_security.xml',
         'security/ir.model.access.csv',
+        # Data
         'data/sequence_data.xml',
-        'data/mail_templates.xml',
         'data/cron_data.xml',
-        'views/mlm_level_rate_views.xml',
-        'views/mlm_affiliate_tier_views.xml',
-        'views/mlm_leaderboard_views.xml',
-        'views/product_commission_rule_views.xml',
-        'views/product_category_views.xml',
-        'views/res_partner_views.xml',
+        'data/mail_templates.xml',
+        # Backend views
         'views/mlm_commission_views.xml',
-        'views/product_template_views.xml',
-        'views/portal_affiliate_views.xml',
-        'views/website_sale_wallet.xml',
-        'views/website_templates.xml',
+        'views/mlm_payout_request_views.xml',
+        'views/mlm_campaign_milestone_views.xml',
+        'views/mlm_affiliate_tier_views.xml',
+        'views/mlm_level_rate_views.xml',
+        'views/mlm_leaderboard_views.xml',
+        'views/res_partner_views.xml',
         'views/mlm_settings_views.xml',
+        'views/product_commission_rule_views.xml',
+        'views/product_template_views.xml',
+        'views/product_category_views.xml',
+        'views/sale_order_views.xml',
+        # Website / portal
+        'views/website_sale_wallet.xml',
+        'views/portal_affiliate_views.xml',
+        'views/og_redirect_template.xml',
+        'views/website_templates.xml',
+        # Menus (must be last — references all actions)
         'views/menus.xml',
     ],
-    'assets': {
-        'web.assets_frontend': [
-            'mlm_affiliate/static/src/js/referral_tracker.js',
-            'mlm_affiliate/static/src/js/affiliate_share.js',
-            'mlm_affiliate/static/src/js/wallet_cart.js',
-        ],
-    },
-    'external_dependencies': {
-        'python': [],   # qrcode is optional — QR panel silently hidden if not installed
-    },
     'pre_init_hook': 'pre_init_hook',
+    'post_init_hook': 'post_init_hook',
     'installable': True,
     'application': True,
-    'auto_install': False,
     'license': 'LGPL-3',
 }

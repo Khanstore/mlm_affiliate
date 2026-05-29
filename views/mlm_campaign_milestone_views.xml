@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         Campaign views
+    ══════════════════════════════════════════════════════════════════ -->
+
+    <record id="view_mlm_campaign_list" model="ir.ui.view">
+        <field name="name">mlm.campaign.list</field>
+        <field name="model">mlm.campaign</field>
+        <field name="arch" type="xml">
+            <list string="Campaigns"
+                  decoration-success="date_end &gt;= current_date and date_start &lt;= current_date"
+                  decoration-muted="date_end &lt; current_date">
+                <field name="name"/>
+                <field name="partner_id" string="Affiliate"/>
+                <field name="date_start"/>
+                <field name="date_end"/>
+                <field name="commission_multiplier" string="Multiplier"/>
+                <field name="promo_code" optional="show"/>
+                <field name="active" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_mlm_campaign_form" model="ir.ui.view">
+        <field name="name">mlm.campaign.form</field>
+        <field name="model">mlm.campaign</field>
+        <field name="arch" type="xml">
+            <form string="Campaign">
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <group string="Campaign Settings">
+                            <field name="partner_id"/>
+                            <field name="date_start"/>
+                            <field name="date_end"/>
+                            <field name="commission_multiplier"
+                                   help="1.0 = no bonus. 1.5 = 50% extra commission."/>
+                            <field name="promo_code"/>
+                            <field name="active"/>
+                        </group>
+                        <group string="Notes">
+                            <field name="note" nolabel="1"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_mlm_campaign" model="ir.actions.act_window">
+        <field name="name">Campaigns</field>
+        <field name="res_model">mlm.campaign</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No campaigns yet!</p>
+            <p>Create a campaign to give an affiliate a boosted commission rate
+               for a specific date range.</p>
+        </field>
+    </record>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         Milestone views
+    ══════════════════════════════════════════════════════════════════ -->
+
+    <record id="view_mlm_milestone_list" model="ir.ui.view">
+        <field name="name">mlm.milestone.list</field>
+        <field name="model">mlm.milestone</field>
+        <field name="arch" type="xml">
+            <list string="Milestones">
+                <field name="name"/>
+                <field name="min_earned" string="Min. Earned"/>
+                <field name="min_referrals" string="Min. Referrals"/>
+                <field name="bonus_amount" string="Bonus Amount"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_mlm_milestone_form" model="ir.ui.view">
+        <field name="name">mlm.milestone.form</field>
+        <field name="model">mlm.milestone</field>
+        <field name="arch" type="xml">
+            <form string="Milestone Bonus">
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <group string="Trigger">
+                            <field name="min_earned"/>
+                            <field name="min_referrals"/>
+                        </group>
+                        <group string="Reward">
+                            <field name="bonus_amount"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                    <group string="Description (shown to affiliate)">
+                        <field name="note" nolabel="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_mlm_milestone" model="ir.actions.act_window">
+        <field name="name">Milestones</field>
+        <field name="res_model">mlm.milestone</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No milestones defined!</p>
+            <p>Create milestones to automatically reward affiliates with bonus
+               commissions when they hit earnings or referral targets.</p>
+        </field>
+    </record>
+
+</odoo>

@@ -9,4 +9,13 @@
         <field name="interval_type">months</field>
         <field name="active" eval="True"/>
     </record>
+    <record id="ir_cron_mlm_release_held" model="ir.cron">
+        <field name="name">MLM Affiliate: Release Held Commissions</field>
+        <field name="model_id" ref="mlm_affiliate.model_mlm_commission"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_release_held_commissions()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="active" eval="True"/>
+    </record>
 </odoo>

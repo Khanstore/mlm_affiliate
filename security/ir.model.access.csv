@@ -10,3 +10,11 @@ access_mlm_level_rate_user,mlm.level.rate user,model_mlm_level_rate,base.group_u
 access_mlm_level_rate_manager,mlm.level.rate manager,model_mlm_level_rate,mlm_affiliate.group_mlm_manager,1,1,1,1
 access_mlm_affiliate_tier_user,mlm.affiliate.tier user,model_mlm_affiliate_tier,base.group_user,1,0,0,0
 access_mlm_affiliate_tier_manager,mlm.affiliate.tier manager,model_mlm_affiliate_tier,mlm_affiliate.group_mlm_manager,1,1,1,1
+access_mlm_payout_request_manager,mlm.payout.request manager,model_mlm_payout_request,mlm_affiliate.group_mlm_manager,1,1,1,1
+access_mlm_payout_request_portal,mlm.payout.request portal,model_mlm_payout_request,base.group_portal,1,1,1,0
+access_mlm_campaign_manager,mlm.campaign manager,model_mlm_campaign,mlm_affiliate.group_mlm_manager,1,1,1,1
+access_mlm_campaign_user,mlm.campaign user,model_mlm_campaign,base.group_user,1,0,0,0
+access_mlm_milestone_manager,mlm.milestone manager,model_mlm_milestone,mlm_affiliate.group_mlm_manager,1,1,1,1
+access_mlm_milestone_user,mlm.milestone user,model_mlm_milestone,base.group_user,1,0,0,0
+access_mlm_partner_milestone_manager,mlm.partner.milestone manager,model_mlm_partner_milestone,mlm_affiliate.group_mlm_manager,1,1,1,1
+access_mlm_partner_milestone_user,mlm.partner.milestone user,model_mlm_partner_milestone,base.group_user,1,0,0,0

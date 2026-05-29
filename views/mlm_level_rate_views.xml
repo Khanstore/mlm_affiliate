@@ -5,12 +5,16 @@
         <field name="name">mlm.level.rate.list</field>
         <field name="model">mlm.level.rate</field>
         <field name="arch" type="xml">
-            <list string="Level Distribution Rates" editable="bottom"
-                  decoration-danger="rate == 0">
+            <list string="Level Distribution Rates"
+                  editable="bottom"
+                  decoration-danger="rate == 0"
+                  decoration-muted="not active">
                 <field name="level"/>
                 <field name="description" placeholder="e.g. Direct Referrer"/>
                 <field name="rate" string="Rate (%)"/>
-                <field name="active"/>
+                <field name="active" optional="show"/>
+                <!-- Running total shown in the footer -->
+                <field name="total_rate" string="Total %" sum="Total Rate (%)"/>
             </list>
         </field>
     </record>
@@ -21,6 +25,12 @@
         <field name="arch" type="xml">
             <form string="Level Distribution Rate">
                 <sheet>
+                    <div class="alert alert-info" role="alert">
+                        <i class="fa fa-info-circle me-1"/>
+                        Rates do <strong>not</strong> need to sum to 100%.
+                        Any unallocated portion simply stays with the company.
+                        Example: L1 = 60%, L2 = 20%, L3 = 10% → 10% unallocated.
+                    </div>
                     <group>
                         <group>
                             <field name="level"/>
@@ -29,6 +39,8 @@
                         </group>
                         <group>
                             <field name="rate" string="Rate (%)"/>
+                            <field name="total_rate" string="Total of All Active Rates (%)"
+                                   readonly="1"/>
                         </group>
                     </group>
                 </sheet>
@@ -41,11 +53,13 @@
         <field name="res_model">mlm.level.rate</field>
         <field name="view_mode">list,form</field>
         <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">No level rates yet!</p>
+            <p class="o_view_nocontent_smiling_face">No level rates defined yet!</p>
             <p>
-                Add one row per MLM level. Rates define how the product's
-                total commission is split across the upline chain.<br/>
-                <strong>Example:</strong> L1=80%, L2=10%, L3=6%, L4=4% (total=100%)
+                Add one row per MLM level. Each rate is the percentage of the
+                product's total commission pot that goes to that upline level.<br/>
+                Rates do <strong>not</strong> need to sum to 100% —
+                any unallocated remainder stays with the company.<br/>
+                <strong>Example:</strong> L1 = 60%, L2 = 20%, L3 = 10%
             </p>
         </field>
     </record>

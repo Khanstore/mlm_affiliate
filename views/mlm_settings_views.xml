@@ -12,14 +12,36 @@
                                  help="Receives commission for any MLM level with no upline partner.">
                             <field name="mlm_admin_partner_id"/>
                         </setting>
-                        <!-- FEATURE: minimum payout threshold -->
                         <setting string="Minimum Payout Amount"
                                  help="Commissions below this amount cannot be marked as Paid. Set to 0 to disable.">
                             <field name="mlm_min_payout_threshold"/>
                         </setting>
+                        <setting string="Commission Hold Period (Days)"
+                                 help="New commissions are locked for this many days (covers refund window). 0 = no hold.">
+                            <field name="mlm_commission_hold_days"/>
+                        </setting>
+                        <setting string="Require Affiliate Application Approval"
+                                 help="New affiliates start as Pending and must be approved before earning commissions.">
+                            <field name="mlm_require_application"/>
+                        </setting>
+                    </block>
+                    <block title="Accounting">
+                        <setting string="Commission Expense Account"
+                                 help="Debit account for MLM commission journal entries (e.g. Marketing Expenses).">
+                            <field name="mlm_expense_account_id"
+                                   domain="[('deprecated', '=', False)]"/>
+                        </setting>
+                        <setting string="Commission Payable Account"
+                                 help="Credit account for MLM commission journal entries (Affiliate Commissions Payable).">
+                            <field name="mlm_payable_account_id"
+                                   domain="[('deprecated', '=', False)]"/>
+                        </setting>
+                        <setting string="Commission Journal"
+                                 help="Miscellaneous journal used for commission entries.">
+                            <field name="mlm_journal_id"/>
+                        </setting>
                     </block>
                     <block title="Email Notifications">
-                        <!-- FEATURE: toggle monthly summary emails -->
                         <setting string="Send Monthly Summary Emails"
                                  help="Automatically email every active affiliate a monthly earnings summary.">
                             <field name="mlm_send_monthly_summary"/>

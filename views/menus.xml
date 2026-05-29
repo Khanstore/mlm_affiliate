@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- FIX: root menu uses group_mlm_manager instead of plain salesman -->
     <menuitem id="menu_mlm_affiliate_root"
               name="MLM Affiliate"
               sequence="85"
@@ -24,25 +23,44 @@
               action="action_mlm_commission_pending"
               sequence="20"/>
 
+    <!-- Payouts -->
+    <menuitem id="menu_mlm_payouts"
+              name="Payouts"
+              parent="menu_mlm_affiliate_root"
+              sequence="15"/>
+    <menuitem id="menu_mlm_payout_all"
+              name="All Payout Requests"
+              parent="menu_mlm_payouts"
+              action="action_mlm_payout_request"
+              sequence="10"/>
+    <menuitem id="menu_mlm_payout_pending"
+              name="Pending Requests"
+              parent="menu_mlm_payouts"
+              action="action_mlm_payout_request_pending"
+              sequence="20"/>
+
     <!-- Network -->
     <menuitem id="menu_mlm_network"
               name="Network"
               parent="menu_mlm_affiliate_root"
               sequence="20"/>
     <menuitem id="menu_mlm_affiliates"
-              name="Affiliates"
+              name="All Affiliates"
               parent="menu_mlm_network"
               action="action_affiliate_partners"
               sequence="10"/>
-
-    <!-- FEATURE: Leaderboard menu -->
+    <menuitem id="menu_mlm_affiliates_pending"
+              name="Pending Applications"
+              parent="menu_mlm_network"
+              action="action_affiliate_partners_pending"
+              sequence="15"/>
     <menuitem id="menu_mlm_leaderboard"
               name="Leaderboard"
               parent="menu_mlm_network"
               action="action_mlm_leaderboard"
               sequence="20"/>
 
-    <!-- Configuration — FIX: uses group_mlm_manager -->
+    <!-- Configuration -->
     <menuitem id="menu_mlm_config"
               name="Configuration"
               parent="menu_mlm_affiliate_root"
@@ -58,12 +76,20 @@
               parent="menu_mlm_config"
               action="action_mlm_level_rate"
               sequence="20"/>
-
-    <!-- FEATURE: Tier management menu -->
     <menuitem id="menu_mlm_affiliate_tiers"
               name="Affiliate Tiers"
               parent="menu_mlm_config"
               action="action_mlm_affiliate_tier"
               sequence="30"/>
+    <menuitem id="menu_mlm_milestones"
+              name="Milestone Bonuses"
+              parent="menu_mlm_config"
+              action="action_mlm_milestone"
+              sequence="40"/>
+    <menuitem id="menu_mlm_campaigns"
+              name="Campaigns"
+              parent="menu_mlm_config"
+              action="action_mlm_campaign"
+              sequence="50"/>
 
 </odoo>

@@ -1,35 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <record id="view_order_form_mlm_affiliate" model="ir.ui.view">
         <field name="name">sale.order.form.mlm.affiliate</field>
         <field name="model">sale.order</field>
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
+
+            <!-- Stat button -->
             <xpath expr="//div[@name='button_box']" position="inside">
-                <button name="action_view_mlm_commissions" type="object" class="oe_stat_button" icon="fa-money" groups="mlm_affiliate.group_mlm_manager" invisible="mlm_commission_count == 0">
-                    <field name="mlm_commission_count" widget="statinfo" string="MLM Commissions"/>
+                <button name="action_view_mlm_commissions" type="object"
+                        class="oe_stat_button" icon="fa-money"
+                        groups="mlm_affiliate.group_mlm_manager"
+                        invisible="commission_count == 0">
+                    <div class="o_stat_info">
+                        <span class="o_stat_value">
+                            <field name="commission_count"/>
+                        </span>
+                        <span class="o_stat_text">Commissions</span>
+                    </div>
                 </button>
             </xpath>
+
+            <!-- Referrer field after partner -->
             <xpath expr="//field[@name='partner_id']" position="after">
-                <field name="mlm_referrer_id" groups="mlm_affiliate.group_mlm_manager"/>
+                <field name="referrer_partner_id"
+                       string="Referred By"
+                       groups="mlm_affiliate.group_mlm_manager"/>
+                <field name="referral_code_used"
+                       string="Referral Code Used"
+                       groups="mlm_affiliate.group_mlm_manager"
+                       readonly="1"/>
             </xpath>
+
+            <!-- Wallet fields after order lines notebook -->
             <xpath expr="//notebook" position="inside">
-                <page string="MLM Commissions" groups="mlm_affiliate.group_mlm_manager" invisible="mlm_commission_count == 0">
-                    <field name="mlm_commission_ids" readonly="1">
+                <page string="MLM Commissions"
+                      groups="mlm_affiliate.group_mlm_manager"
+                      invisible="commission_count == 0">
+                    <group>
+                        <field name="total_commission_amount"
+                               string="Total Commission Amount"
+                               readonly="1"/>
+                        <field name="wallet_amount_used"
+                               string="Wallet Credit Used"
+                               readonly="1"/>
+                        <field name="wallet_partner_id"
+                               string="Wallet Owner"
+                               readonly="1"/>
+                    </group>
+                    <field name="commission_ids" readonly="1">
                         <list>
                             <field name="name"/>
-                            <field name="beneficiary_id"/>
-                            <field name="source_referrer_id"/>
-                            <field name="product_id"/>
+                            <field name="partner_id"   string="Earner"/>
                             <field name="level"/>
-                            <field name="commission_base"/>
-                            <field name="commission_percent"/>
-                            <field name="amount"/>
-                            <field name="currency_id" column_invisible="1"/>
-                            <field name="state"/>
+                            <field name="product_id"/>
+                            <field name="amount"       sum="Total"/>
+                            <field name="currency_id"  column_invisible="1"/>
+                            <field name="payout_method"/>
+                            <field name="state"
+                                   widget="badge"
+                                   decoration-warning="state == 'pending'"
+                                   decoration-info="state == 'approved'"
+                                   decoration-success="state == 'paid'"
+                                   decoration-danger="state == 'cancelled'"/>
                         </list>
                     </field>
                 </page>
             </xpath>
+
         </field>
     </record>
 </odoo>
