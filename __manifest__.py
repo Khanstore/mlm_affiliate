@@ -1,6 +1,6 @@
 {
     'name': 'MLM Affiliate',
-    'version': '18.0.2.16.0',
+    'version': '18.0.2.18.0',
     'category': 'Sales/Affiliate',
     'summary': 'Multi-level affiliate commissions with wallet, accounting, campaigns, milestones and fraud protection.',
     'description': """
@@ -25,6 +25,7 @@ Features:
 - Referral link click tracking + QR code
 - Monthly summary emails (toggleable)
     """,
+    'website': 'https://www.khan-store.com/mlm',
     'author': 'Custom',
     'depends': [
         'sale_management',
@@ -44,6 +45,7 @@ Features:
         'data/sequence_data.xml',
         'data/wallet_discount_product.xml',
         'data/mlm_level_rate_data.xml',
+        'data/mlm_accounting_data.xml',
         'data/cron_data.xml',
         'data/mail_templates.xml',
         # Backend views
@@ -72,4 +74,5 @@ Features:
     'installable': True,
     'application': True,
     'license': 'LGPL-3',
+    'images': ['static/description/icon.png'],
 }

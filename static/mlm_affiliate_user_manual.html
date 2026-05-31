@@ -1,0 +1,1473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MLM Affiliate — User Manual | Odoo 18</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --ink: #1a1814;
+    --ink-muted: #5a5750;
+    --ink-faint: #9a9590;
+    --paper: #faf9f6;
+    --paper-warm: #f3f1eb;
+    --accent: #c05a2a;
+    --accent-light: #f5ede6;
+    --accent-dark: #8a3e1c;
+    --green: #2a6b3a;
+    --green-light: #e8f4eb;
+    --blue: #1e4fa0;
+    --blue-light: #e8eef8;
+    --amber: #c08020;
+    --amber-light: #fdf5e0;
+    --border: #e8e4dc;
+    --border-strong: #d0ccc2;
+    --sidebar-w: 260px;
+    --content-max: 780px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    font-size: 16px;
+    line-height: 1.75;
+  }
+
+  /* ── Layout ── */
+  .layout { display: flex; min-height: 100vh; }
+
+  .sidebar {
+    width: var(--sidebar-w);
+    background: var(--paper-warm);
+    border-right: 1px solid var(--border);
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    overflow-y: auto;
+    padding: 0;
+    z-index: 100;
+  }
+
+  .sidebar-logo {
+    padding: 24px 20px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-logo .module-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px;
+    color: var(--accent);
+    display: block;
+  }
+  .sidebar-logo .version-badge {
+    font-size: 11px;
+    background: var(--accent-light);
+    color: var(--accent);
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-weight: 500;
+    display: inline-block;
+    margin-top: 4px;
+  }
+
+  .sidebar nav { padding: 12px 0; }
+  .nav-section { margin-bottom: 4px; }
+  .nav-section-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    padding: 10px 20px 4px;
+    display: block;
+  }
+  .nav-section a {
+    display: block;
+    padding: 6px 20px;
+    font-size: 13.5px;
+    color: var(--ink-muted);
+    text-decoration: none;
+    border-left: 2px solid transparent;
+    transition: all 0.15s;
+  }
+  .nav-section a:hover, .nav-section a.active {
+    color: var(--accent);
+    background: var(--accent-light);
+    border-left-color: var(--accent);
+  }
+
+  .content {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    max-width: calc(var(--content-max) + var(--sidebar-w) + 80px);
+  }
+
+  .hero {
+    background: var(--ink);
+    color: white;
+    padding: 64px 60px 56px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -40px;
+    width: 400px; height: 400px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: 0.12;
+  }
+  .hero::after {
+    content: '';
+    position: absolute;
+    bottom: -80px; right: 80px;
+    width: 240px; height: 240px;
+    border-radius: 50%;
+    background: #c08020;
+    opacity: 0.08;
+  }
+
+  .hero-eyebrow {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+  .hero h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 48px;
+    line-height: 1.1;
+    margin-bottom: 16px;
+    position: relative;
+  }
+  .hero-sub {
+    font-size: 17px;
+    color: rgba(255,255,255,0.65);
+    max-width: 520px;
+    margin-bottom: 32px;
+    line-height: 1.6;
+  }
+  .hero-meta {
+    display: flex;
+    gap: 24px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.45);
+  }
+  .hero-meta span { display: flex; align-items: center; gap: 6px; }
+
+  article { padding: 48px 60px; }
+
+  section { margin-bottom: 64px; scroll-margin-top: 24px; }
+
+  h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 32px;
+    color: var(--ink);
+    margin-bottom: 8px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--ink);
+    margin: 28px 0 12px;
+  }
+  h4 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink-muted);
+    margin: 20px 0 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  p { margin-bottom: 16px; color: var(--ink-muted); }
+
+  /* ── UI Mockups ── */
+  .mockup {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin: 24px 0 32px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04);
+  }
+  .mockup-bar {
+    background: #2c2a26;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .mockup-dot { width: 12px; height: 12px; border-radius: 50%; }
+  .mockup-dot.r { background: #e05555; }
+  .mockup-dot.y { background: #e0b255; }
+  .mockup-dot.g { background: #55b855; }
+  .mockup-url {
+    flex: 1;
+    background: #3d3b36;
+    border-radius: 6px;
+    padding: 4px 12px;
+    font-size: 12px;
+    color: rgba(255,255,255,0.45);
+    font-family: 'JetBrains Mono', monospace;
+    margin: 0 12px;
+  }
+
+  .mockup-body {
+    background: white;
+    padding: 0;
+    min-height: 200px;
+  }
+
+  /* Odoo-like top nav */
+  .odoo-nav {
+    background: #714B67;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    height: 44px;
+    gap: 0;
+  }
+  .odoo-nav-app {
+    color: rgba(255,255,255,0.7);
+    font-size: 13px;
+    padding: 0 16px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    border-bottom: 2px solid transparent;
+    cursor: default;
+    white-space: nowrap;
+  }
+  .odoo-nav-app.active {
+    color: white;
+    border-bottom-color: white;
+  }
+  .odoo-breadcrumb {
+    background: #f8f7f4;
+    border-bottom: 1px solid #e5e3df;
+    padding: 10px 20px;
+    font-size: 13px;
+    color: #714B67;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .odoo-breadcrumb span { color: #9b9591; }
+
+  /* Odoo list view */
+  .odoo-list {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+  }
+  .odoo-list thead tr {
+    background: #f8f7f4;
+    border-bottom: 2px solid #e5e3df;
+  }
+  .odoo-list th {
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 600;
+    color: #5a5754;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .odoo-list td {
+    padding: 10px 14px;
+    border-bottom: 1px solid #f0eeeb;
+    color: #3a3835;
+    vertical-align: middle;
+  }
+  .odoo-list tr:hover td { background: #faf9f7; }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11.5px;
+    font-weight: 600;
+  }
+  .badge-pending { background: #fff4e0; color: #c08020; }
+  .badge-approved { background: #e8f4eb; color: #2a6b3a; }
+  .badge-paid { background: #e8eef8; color: #1e4fa0; }
+  .badge-cancelled { background: #fde8e8; color: #b03030; }
+  .badge-draft { background: #f3f1eb; color: #6a6562; }
+
+  /* Stat buttons */
+  .stat-buttons {
+    display: flex;
+    gap: 1px;
+    background: #e5e3df;
+    border-bottom: 1px solid #e5e3df;
+    padding: 0 20px;
+  }
+  .stat-btn {
+    background: white;
+    padding: 10px 20px;
+    font-size: 13px;
+    border: none;
+    cursor: default;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    min-width: 80px;
+  }
+  .stat-btn .num {
+    font-size: 20px;
+    font-weight: 600;
+    color: #714B67;
+    line-height: 1;
+  }
+  .stat-btn .lbl { font-size: 11px; color: #9b9591; text-transform: uppercase; letter-spacing: 0.05em; }
+
+  /* Settings form */
+  .settings-section {
+    padding: 20px;
+  }
+  .settings-group {
+    border: 1px solid #e5e3df;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .settings-group-title {
+    background: #f8f7f4;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #3a3835;
+    border-bottom: 1px solid #e5e3df;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .settings-row {
+    padding: 12px 16px;
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 16px;
+    align-items: center;
+    border-bottom: 1px solid #f3f1eb;
+  }
+  .settings-row:last-child { border-bottom: none; }
+  .settings-label { font-size: 13.5px; color: #3a3835; font-weight: 500; }
+  .settings-help { font-size: 12px; color: #9b9591; margin-top: 2px; }
+  .settings-input {
+    background: white;
+    border: 1px solid #d0ccc8;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 13.5px;
+    color: #3a3835;
+    font-family: 'DM Sans', sans-serif;
+    width: 100%;
+    max-width: 300px;
+  }
+  .settings-input-filled {
+    background: #f0f7ff;
+    border-color: #1e4fa0;
+    color: #1e4fa0;
+  }
+
+  /* Portal mockup */
+  .portal-card {
+    background: white;
+    border: 1px solid #e8e4dc;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 12px;
+  }
+  .portal-stat {
+    text-align: center;
+    padding: 16px;
+    background: #faf9f7;
+    border-radius: 8px;
+  }
+  .portal-stat .val {
+    font-size: 28px;
+    font-weight: 600;
+    color: #714B67;
+    font-family: 'DM Serif Display', serif;
+  }
+  .portal-stat .lbl { font-size: 12px; color: #9b9591; margin-top: 4px; }
+
+  /* Chart bars */
+  .mini-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    height: 60px;
+    padding-top: 8px;
+  }
+  .mini-bar {
+    flex: 1;
+    background: #714B67;
+    opacity: 0.7;
+    border-radius: 3px 3px 0 0;
+    min-height: 4px;
+  }
+
+  /* Callout boxes */
+  .callout {
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 20px 0;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    border-left: 3px solid;
+  }
+  .callout-tip { background: var(--blue-light); border-color: var(--blue); }
+  .callout-warn { background: var(--amber-light); border-color: var(--amber); }
+  .callout-success { background: var(--green-light); border-color: var(--green); }
+  .callout-danger { background: #fde8e8; border-color: #b03030; }
+  .callout-icon { font-size: 18px; margin-top: 1px; flex-shrink: 0; }
+  .callout-content { flex: 1; }
+  .callout-title { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+  .callout-tip .callout-title { color: var(--blue); }
+  .callout-warn .callout-title { color: var(--amber); }
+  .callout-success .callout-title { color: var(--green); }
+  .callout-danger .callout-title { color: #b03030; }
+  .callout p { font-size: 14px; margin: 0; }
+
+  /* Steps */
+  .steps { counter-reset: step; margin: 20px 0; }
+  .step {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+    align-items: flex-start;
+  }
+  .step-num {
+    counter-increment: step;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .step-num::before { content: counter(step); }
+  .step-content h4 { margin: 0 0 6px; font-size: 15px; font-weight: 600; color: var(--ink); text-transform: none; letter-spacing: 0; }
+  .step-content p { margin: 0; font-size: 14px; }
+
+  /* Path diagram */
+  .flow-diagram {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin: 24px 0;
+    flex-wrap: wrap;
+    gap: 0;
+  }
+  .flow-node {
+    background: var(--paper-warm);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+  .flow-node.accent { background: var(--accent-light); border-color: var(--accent); color: var(--accent-dark); }
+  .flow-node.green { background: var(--green-light); border-color: var(--green); color: var(--green); }
+  .flow-node.blue { background: var(--blue-light); border-color: var(--blue); color: var(--blue); }
+  .flow-arrow {
+    font-size: 18px;
+    color: var(--ink-faint);
+    padding: 0 6px;
+  }
+
+  /* Table */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    margin: 16px 0;
+  }
+  .data-table th {
+    background: var(--paper-warm);
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink-muted);
+    border-bottom: 2px solid var(--border);
+  }
+  .data-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    color: var(--ink-muted);
+    vertical-align: top;
+  }
+  .data-table td:first-child { font-weight: 500; color: var(--ink); }
+  .data-table tr:last-child td { border-bottom: none; }
+
+  code, .code {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--paper-warm);
+    border: 1px solid var(--border);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--accent-dark);
+  }
+
+  /* Tier cards */
+  .tier-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 20px 0; }
+  .tier-card {
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+    border: 1px solid;
+  }
+  .tier-card.bronze { background: #fdf6ee; border-color: #d4956a; }
+  .tier-card.silver { background: #f4f4f6; border-color: #909099; }
+  .tier-card.gold   { background: #fdf7e0; border-color: #c9a030; }
+  .tier-card.diamond { background: #eef4fd; border-color: #5090d0; }
+  .tier-icon { font-size: 28px; margin-bottom: 8px; }
+  .tier-name { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+  .tier-card.bronze .tier-name { color: #8b5030; }
+  .tier-card.silver .tier-name { color: #606070; }
+  .tier-card.gold .tier-name { color: #8a6010; }
+  .tier-card.diamond .tier-name { color: #2060a0; }
+  .tier-req { font-size: 12px; color: var(--ink-faint); }
+  .tier-mult { font-size: 14px; font-weight: 600; margin-top: 8px; }
+  .tier-card.bronze .tier-mult { color: #8b5030; }
+  .tier-card.silver .tier-mult { color: #606070; }
+  .tier-card.gold .tier-mult { color: #8a6010; }
+  .tier-card.diamond .tier-mult { color: #2060a0; }
+
+  /* Commission tree */
+  .tree {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    background: var(--paper-warm);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    line-height: 2;
+    color: var(--ink-muted);
+  }
+  .tree .highlight { color: var(--accent); font-weight: 600; }
+  .tree .amount { color: var(--green); }
+
+  /* Print */
+  @media print {
+    .sidebar { display: none; }
+    .content { margin-left: 0; }
+    .hero { background: #1a1814 !important; -webkit-print-color-adjust: exact; }
+    .mockup { box-shadow: none; border: 1px solid #ccc; }
+  }
+
+  @media (max-width: 900px) {
+    .sidebar { display: none; }
+    .content { margin-left: 0; }
+    article { padding: 32px 24px; }
+    .hero { padding: 40px 24px; }
+    .hero h1 { font-size: 32px; }
+    .tier-cards { grid-template-columns: repeat(2, 1fr); }
+    .settings-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <span class="module-name">MLM Affiliate</span>
+    <span class="version-badge">Odoo 18 · v2.30</span>
+  </div>
+  <nav>
+    <div class="nav-section">
+      <span class="nav-section-label">Getting Started</span>
+      <a href="#overview">Overview</a>
+      <a href="#install">Installation</a>
+      <a href="#first-setup">First-time Setup</a>
+    </div>
+    <div class="nav-section">
+      <span class="nav-section-label">Admin Guide</span>
+      <a href="#settings">Settings</a>
+      <a href="#commission-rules">Commission Rules</a>
+      <a href="#level-rates">Level Rates</a>
+      <a href="#tiers">Affiliate Tiers</a>
+      <a href="#campaigns">Campaigns</a>
+      <a href="#milestones">Milestones</a>
+      <a href="#managing-affiliates">Managing Affiliates</a>
+      <a href="#commissions">Commissions</a>
+      <a href="#payouts">Payout Requests</a>
+      <a href="#accounting">Accounting</a>
+    </div>
+    <div class="nav-section">
+      <span class="nav-section-label">Affiliate Guide</span>
+      <a href="#affiliate-portal">Affiliate Portal</a>
+      <a href="#referral-link">Referral Links</a>
+      <a href="#wallet">Wallet</a>
+      <a href="#payout-request">Requesting a Payout</a>
+    </div>
+    <div class="nav-section">
+      <span class="nav-section-label">Reference</span>
+      <a href="#commission-engine">Commission Engine</a>
+      <a href="#fraud">Fraud Protection</a>
+      <a href="#emails">Email Notifications</a>
+      <a href="#faq">FAQ</a>
+    </div>
+  </nav>
+</aside>
+
+<!-- Main content -->
+<div class="content">
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-eyebrow">User Manual</div>
+  <h1>MLM Affiliate</h1>
+  <div class="hero-sub">Multi-level affiliate commission management with wallet, accounting integration, campaigns, and fraud protection — built for Odoo 18.</div>
+  <div class="hero-meta">
+    <span>📦 Version 2.30 (18.0.2.18.0)</span>
+    <span>🔧 Odoo 18 Community &amp; Enterprise</span>
+    <span>📄 LGPL-3 License</span>
+  </div>
+</div>
+
+<article>
+
+<!-- OVERVIEW -->
+<section id="overview">
+  <h2>Overview</h2>
+  <p>The MLM Affiliate module adds a complete multi-level marketing and affiliate commission system to your Odoo 18 store. When a referred customer places a confirmed and paid order, the system automatically calculates and distributes commissions to every level of the referrer's upline chain — all without manual intervention.</p>
+
+  <div class="flow-diagram">
+    <div class="flow-node">Customer visits site<br><small style="color:#9b9591">via referral link</small></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node accent">Order confirmed</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node">Commissions created<br><small style="color:#9b9591">per level, pending</small></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node green">Invoice paid<br><small style="color:#9b9591">auto-approved</small></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node blue">Wallet credited<br><small style="color:#9b9591">or bank payout</small></div>
+  </div>
+
+  <h3>Key Capabilities</h3>
+  <table class="data-table">
+    <thead><tr><th>Feature</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>Multi-level commissions</td><td>Distribute a commission pot across unlimited upline levels with configurable percentage rates per level.</td></tr>
+      <tr><td>Pricelist-aware rules</td><td>Different commission rates for reseller, VIP, or wholesale pricelists vs. the public pricelist.</td></tr>
+      <tr><td>Affiliate wallet</td><td>Commissions credited to a wallet balance that affiliates can spend at checkout — no cash withdrawal needed.</td></tr>
+      <tr><td>Payout requests</td><td>Affiliates submit payout requests via the portal; admin approves and marks as paid.</td></tr>
+      <tr><td>Tier system</td><td>Automatic tier promotion (Bronze → Silver → Gold → Diamond) based on earnings and referral count, with tier commission multipliers.</td></tr>
+      <tr><td>Campaigns</td><td>Time-limited commission boosts for specific affiliates with optional buyer promo codes.</td></tr>
+      <tr><td>Milestone bonuses</td><td>One-time bonus commissions when affiliates cross earnings or referral thresholds.</td></tr>
+      <tr><td>Accounting</td><td>Approved commissions automatically create debit/credit journal entries.</td></tr>
+      <tr><td>Fraud protection</td><td>Self-referral prevention, affiliate application approval, commission hold period.</td></tr>
+      <tr><td>Refund clawback</td><td>Commissions automatically cancelled when the linked invoice is reversed.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- INSTALLATION -->
+<section id="install">
+  <h2>Installation</h2>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num"></div>
+      <div class="step-content">
+        <h4>Download the module</h4>
+        <p>Download <code>mlm_affiliate_v2_30_fixed.zip</code> and extract it to your Odoo custom addons directory (e.g. <code>F:\odoo_dev\odoo18\custom_addons\</code>). The extracted folder must be named <code>mlm_affiliate</code>.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num"></div>
+      <div class="step-content">
+        <h4>Restart the Odoo server</h4>
+        <p>Stop and restart the Odoo service so the new addon directory is picked up. In development: <code>python odoo-bin -d yourdb -u all</code> or restart the service.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num"></div>
+      <div class="step-content">
+        <h4>Activate Developer Mode</h4>
+        <p>Go to <strong>Settings → General Settings</strong>, scroll to the bottom and click <strong>Activate the developer mode</strong>. This is required to see the Apps list with technical modules.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num"></div>
+      <div class="step-content">
+        <h4>Install the module</h4>
+        <p>Go to <strong>Apps</strong>, remove the "Apps" filter in the search box, search for <strong>MLM Affiliate</strong>, and click <strong>Install</strong>.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num"></div>
+      <div class="step-content">
+        <h4>Complete first-time setup</h4>
+        <p>After installation, the post-install hook automatically creates two accounts (501108, 300201) and one journal (MLMC), and links them to Settings. Verify in <strong>Settings → MLM Affiliate</strong>.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout callout-warn">
+    <div class="callout-icon">⚠️</div>
+    <div class="callout-content">
+      <div class="callout-title">Upgrading from a broken install?</div>
+      <p>If you previously had a version with the <code>MLM-EXP</code> / <code>MLM-PAY</code> account code error, upgrade to v2.30 (18.0.2.18.0) and the migration script will automatically link the accounts/journal to your MLM settings on the first server start.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FIRST SETUP -->
+<section id="first-setup">
+  <h2>First-time Setup</h2>
+  <p>After installation, follow these steps in order before going live.</p>
+
+  <h3>1. Verify accounting links</h3>
+  <p>Go to <strong>Settings → MLM Affiliate → Accounting</strong> and confirm all three fields are filled:</p>
+
+  <div class="mockup">
+    <div class="mockup-bar"><div class="mockup-dot r"></div><div class="mockup-dot y"></div><div class="mockup-dot g"></div><div class="mockup-url">localhost:8069/odoo/settings</div></div>
+    <div class="mockup-body">
+      <div class="odoo-nav">
+        <div class="odoo-nav-app">Technical</div>
+        <div class="odoo-nav-app active">Settings</div>
+        <div class="odoo-nav-app">Accounting</div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-group">
+          <div class="settings-group-title">Accounting</div>
+          <div class="settings-row">
+            <div><div class="settings-label">Commission Expense Account</div><div class="settings-help">Debit account for commission journal entries</div></div>
+            <input class="settings-input settings-input-filled" value="501108 MLM Commission Expense" readonly>
+          </div>
+          <div class="settings-row">
+            <div><div class="settings-label">Commission Payable Account</div><div class="settings-help">Credit account for commission journal entries</div></div>
+            <input class="settings-input settings-input-filled" value="300201 MLM Commission Payable" readonly>
+          </div>
+          <div class="settings-row">
+            <div><div class="settings-label">Commission Journal</div><div class="settings-help">Miscellaneous journal for commission entries</div></div>
+            <input class="settings-input settings-input-filled" value="MLM Commissions (MLMC)" readonly>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h3>2. Configure commission level rates</h3>
+  <p>Go to <strong>MLM Affiliate → Configuration → Level Rates</strong>. The default rates are pre-installed. Adjust to match your business model. Rates do not need to sum to 100% — any unallocated percentage stays with the company.</p>
+
+  <table class="data-table">
+    <thead><tr><th>Level</th><th>Description</th><th>Default Rate</th></tr></thead>
+    <tbody>
+      <tr><td>Level 1</td><td>Direct referrer (the affiliate who shared the link)</td><td>60%</td></tr>
+      <tr><td>Level 2</td><td>Their upline sponsor</td><td>20%</td></tr>
+      <tr><td>Level 3</td><td>Second-level upline</td><td>10%</td></tr>
+    </tbody>
+  </table>
+
+  <h3>3. Create your first commission rule</h3>
+  <p>Go to <strong>MLM Affiliate → Configuration → Commission Rules</strong> → New. Set a rule for your main product category with a percentage commission pot.</p>
+
+  <h3>4. Create your affiliate tiers</h3>
+  <p>Go to <strong>MLM Affiliate → Configuration → Affiliate Tiers</strong>. Create at least a basic tier with <code>min_earned = 0</code> so that all affiliates are assigned to something.</p>
+
+  <h3>5. Set the admin partner</h3>
+  <p>In <strong>Settings → MLM Affiliate → Commission Settings</strong>, set the <strong>Admin Account</strong>. This partner receives commission amounts for any MLM level that has no upline partner in the chain.</p>
+</section>
+
+<!-- SETTINGS -->
+<section id="settings">
+  <h2>Settings</h2>
+  <p>All MLM settings are under <strong>Settings → MLM Affiliate</strong>.</p>
+
+  <div class="mockup">
+    <div class="mockup-bar"><div class="mockup-dot r"></div><div class="mockup-dot y"></div><div class="mockup-dot g"></div><div class="mockup-url">localhost:8069/odoo/settings</div></div>
+    <div class="mockup-body">
+      <div class="odoo-nav">
+        <div class="odoo-nav-app active">Settings</div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-group">
+          <div class="settings-group-title">Commission Settings</div>
+          <div class="settings-row">
+            <div><div class="settings-label">Admin Account</div><div class="settings-help">Receives commissions for levels with no upline</div></div>
+            <input class="settings-input" value="Administrator" readonly>
+          </div>
+          <div class="settings-row">
+            <div><div class="settings-label">Minimum Payout Amount</div><div class="settings-help">0 = disabled</div></div>
+            <input class="settings-input" value="500.00" readonly style="max-width:120px">
+          </div>
+          <div class="settings-row">
+            <div><div class="settings-label">Commission Hold Period (Days)</div><div class="settings-help">Covers refund/return window. 0 = no hold</div></div>
+            <input class="settings-input" value="14" readonly style="max-width:80px">
+          </div>
+          <div class="settings-row">
+            <div><div class="settings-label">Require Application Approval</div><div class="settings-help">New affiliates start as Pending Review</div></div>
+            <input class="settings-input" value="☑ Enabled" readonly style="max-width:120px">
+          </div>
+        </div>
+        <div class="settings-group">
+          <div class="settings-group-title">Email Notifications</div>
+          <div class="settings-row">
+            <div><div class="settings-label">Send Monthly Summary Emails</div><div class="settings-help">Email every active affiliate at month end</div></div>
+            <input class="settings-input" value="☑ Enabled" readonly style="max-width:120px">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <table class="data-table">
+    <thead><tr><th>Setting</th><th>Effect</th><th>Recommended</th></tr></thead>
+    <tbody>
+      <tr><td>Admin Account</td><td>Receives "orphan" commissions where no upline exists at a level</td><td>Your company's main partner or a dedicated MLM admin account</td></tr>
+      <tr><td>Minimum Payout Amount</td><td>Blocks marking commissions as Paid if amount is below threshold</td><td>500 – 1000 to reduce payment overhead</td></tr>
+      <tr><td>Commission Hold Period</td><td>New commissions locked for N days — cannot be approved until hold expires</td><td>Match your return policy (14–30 days)</td></tr>
+      <tr><td>Require Application Approval</td><td>New affiliates need admin approval before earning commissions</td><td>Enabled for controlled programs</td></tr>
+      <tr><td>Send Monthly Summary</td><td>Automatic email to all affiliates on the 1st of each month with previous month's earnings</td><td>Enabled — keeps affiliates engaged</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- COMMISSION RULES -->
+<section id="commission-rules">
+  <h2>Commission Rules</h2>
+  <p>Commission rules define how much of a sale goes into the "commission pot" — the total amount that is then split across MLM levels. Rules are found under <strong>MLM Affiliate → Configuration → Commission Rules</strong>.</p>
+
+  <h3>Rule types (priority order)</h3>
+  <table class="data-table">
+    <thead><tr><th>Priority</th><th>Type</th><th>Matches</th></tr></thead>
+    <tbody>
+      <tr><td>1 (highest)</td><td>Specific Variant + Pricelist</td><td>One product variant on a specific pricelist</td></tr>
+      <tr><td>2</td><td>Product Template + Pricelist</td><td>All variants of a product on a specific pricelist</td></tr>
+      <tr><td>3</td><td>Category + Pricelist</td><td>All products in category tree on a pricelist</td></tr>
+      <tr><td>4</td><td>Specific Variant</td><td>One product variant (any pricelist)</td></tr>
+      <tr><td>5</td><td>Product Template</td><td>All variants of a product (any pricelist)</td></tr>
+      <tr><td>6 (lowest)</td><td>Category</td><td>All products in category tree (any pricelist)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout callout-tip">
+    <div class="callout-icon">💡</div>
+    <div class="callout-content">
+      <div class="callout-title">Tip: Set a catch-all category rule first</div>
+      <p>Create one rule for your root product category (e.g. "All" or "Saleable") at a low commission percentage. Then override specific products or categories with higher rates. This ensures every product generates some commission.</p>
+    </div>
+  </div>
+
+  <h3>Commission types</h3>
+  <table class="data-table">
+    <thead><tr><th>Type</th><th>Calculation</th><th>Example</th></tr></thead>
+    <tbody>
+      <tr><td>Percentage (%)</td><td><code>price_subtotal × rate ÷ 100</code></td><td>10% on a $200 order → $20 pot</td></tr>
+      <tr><td>Fixed Amount</td><td><code>fixed_amount × qty</code></td><td>$5 fixed on a 3-unit order → $15 pot</td></tr>
+    </tbody>
+  </table>
+
+  <div class="mockup">
+    <div class="mockup-bar"><div class="mockup-dot r"></div><div class="mockup-dot y"></div><div class="mockup-dot g"></div><div class="mockup-url">localhost:8069/odoo/mlm-affiliate/commission-rules/new</div></div>
+    <div class="mockup-body">
+      <div class="odoo-nav">
+        <div class="odoo-nav-app active">MLM Affiliate</div>
+      </div>
+      <div class="odoo-breadcrumb">Commission Rules <span>›</span> New</div>
+      <div class="settings-section" style="max-width:600px">
+        <div class="settings-group">
+          <div class="settings-group-title">Commission Rule</div>
+          <div class="settings-row">
+            <div class="settings-label">Apply To</div>
+            <input class="settings-input settings-input-filled" value="Product (all variants)" readonly>
+          </div>
+          <div class="settings-row">
+            <div class="settings-label">Product</div>
+            <input class="settings-input settings-input-filled" value="Premium Membership" readonly>
+          </div>
+          <div class="settings-row">
+            <div class="settings-label">Pricelist</div>
+            <input class="settings-input" value="(empty — Public / All)" readonly style="color:#9b9591">
+          </div>
+          <div class="settings-row">
+            <div class="settings-label">Commission Type</div>
+            <input class="settings-input settings-input-filled" value="Percentage (%)" readonly>
+          </div>
+          <div class="settings-row">
+            <div class="settings-label">Total Commission</div>
+            <input class="settings-input settings-input-filled" value="15" readonly style="max-width:80px">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LEVEL RATES -->
+<section id="level-rates">
+  <h2>Level Distribution Rates</h2>
+  <p>Level rates define what percentage of the commission pot each upline level receives. Go to <strong>MLM Affiliate → Configuration → Level Rates</strong>.</p>
+
+  <h3>How the commission pot is split</h3>
+  <p>Given a 10% commission rule on a $300 order (pot = $30) and these level rates:</p>
+
+  <div class="tree">
+    Commission pot: <span class="amount">$30.00</span><br><br>
+    └─ Level 1 (60%) → <span class="highlight">Direct Referrer</span>: <span class="amount">$18.00</span><br>
+    &nbsp;&nbsp;&nbsp;└─ Level 2 (20%) → <span class="highlight">Their Sponsor</span>: <span class="amount">$6.00</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─ Level 3 (10%) → <span class="highlight">Second Upline</span>: <span class="amount">$3.00</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─ Remaining (10%) → <span class="highlight">Company (unallocated)</span>: <span class="amount">$3.00</span>
+  </div>
+
+  <div class="callout callout-success">
+    <div class="callout-icon">✅</div>
+    <div class="callout-content">
+      <div class="callout-title">Rates don't need to sum to 100%</div>
+      <p>Unallocated percentages simply stay with the company. This makes it easy to add or remove levels without rebalancing every other rate.</p>
+    </div>
+  </div>
+</section>
+
+<!-- TIERS -->
+<section id="tiers">
+  <h2>Affiliate Tiers</h2>
+  <p>Tiers are automatically assigned when an affiliate's lifetime earnings and/or direct referral count cross the configured thresholds. Go to <strong>MLM Affiliate → Configuration → Affiliate Tiers</strong>.</p>
+
+  <div class="tier-cards">
+    <div class="tier-card bronze">
+      <div class="tier-icon">🥉</div>
+      <div class="tier-name">Bronze</div>
+      <div class="tier-req">$0+ earned<br>0+ referrals</div>
+      <div class="tier-mult">1.0× multiplier</div>
+    </div>
+    <div class="tier-card silver">
+      <div class="tier-icon">🥈</div>
+      <div class="tier-name">Silver</div>
+      <div class="tier-req">$500+ earned<br>3+ referrals</div>
+      <div class="tier-mult">1.1× multiplier</div>
+    </div>
+    <div class="tier-card gold">
+      <div class="tier-icon">🥇</div>
+      <div class="tier-name">Gold</div>
+      <div class="tier-req">$2,000+ earned<br>10+ referrals</div>
+      <div class="tier-mult">1.25× multiplier</div>
+    </div>
+    <div class="tier-card diamond">
+      <div class="tier-icon">💎</div>
+      <div class="tier-name">Diamond</div>
+      <div class="tier-req">$10,000+ earned<br>30+ referrals</div>
+      <div class="tier-mult">1.5× multiplier</div>
+    </div>
+  </div>
+
+  <p>Tier multipliers stack with campaign multipliers. A Gold affiliate on an active 1.2× campaign earns <code>1.25 × 1.2 = 1.5×</code> on all commissions during the campaign period.</p>
+
+  <div class="callout callout-tip">
+    <div class="callout-icon">💡</div>
+    <div class="callout-content">
+      <div class="callout-title">Always create a base tier with min_earned = 0</div>
+      <p>If no tier matches an affiliate, their <code>tier_id</code> is set to empty and no multiplier is applied. A Bronze tier at $0 ensures every affiliate is always in a tier.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CAMPAIGNS -->
+<section id="campaigns">
+  <h2>Campaigns</h2>
+  <p>Campaigns give a specific affiliate a time-limited commission boost. Go to <strong>MLM Affiliate → Campaigns</strong> → New.</p>
+
+  <table class="data-table">
+    <thead><tr><th>Field</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>Affiliate</td><td>Which affiliate gets the boost</td></tr>
+      <tr><td>Start / End Date</td><td>Campaign is active between these dates (inclusive)</td></tr>
+      <tr><td>Commission Multiplier</td><td>All commissions earned during this period are multiplied. 1.5 = 50% bonus</td></tr>
+      <tr><td>Buyer Promo Code</td><td>A code you can share with buyers — not yet wired to checkout discounts (coming in v2.32)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout callout-warn">
+    <div class="callout-icon">⚠️</div>
+    <div class="callout-content">
+      <div class="callout-title">One active campaign per affiliate at a time</div>
+      <p>Only one campaign per affiliate is active on any given date. If multiple campaigns overlap for the same affiliate, only the first one found is applied (ordered by start date desc). Plan campaigns to avoid overlaps.</p>
+    </div>
+  </div>
+</section>
+
+<!-- MILESTONES -->
+<section id="milestones">
+  <h2>Milestones</h2>
+  <p>Milestones are one-time bonus commissions awarded automatically when an affiliate crosses a threshold. Go to <strong>MLM Affiliate → Configuration → Milestones</strong>.</p>
+
+  <table class="data-table">
+    <thead><tr><th>Field</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>Milestone Name</td><td>Displayed in the commission record note (e.g. "First $1,000 Earned")</td></tr>
+      <tr><td>Min. Total Earned</td><td>Lifetime commission earnings threshold</td></tr>
+      <tr><td>Min. Direct Referrals</td><td>Number of direct downline partners required alongside the earning threshold</td></tr>
+      <tr><td>Bonus Amount</td><td>Fixed bonus credited to the affiliate's wallet as an approved commission</td></tr>
+    </tbody>
+  </table>
+
+  <p>Milestone checks run automatically after every tier update — which happens after each commission approval. Each milestone is awarded at most once per affiliate.</p>
+</section>
+
+<!-- MANAGING AFFILIATES -->
+<section id="managing-affiliates">
+  <h2>Managing Affiliates</h2>
+  <p>Affiliates are standard Odoo contacts (res.partner) with the <strong>Is Affiliate</strong> flag enabled. Find them under <strong>MLM Affiliate → Affiliates</strong>, or in <strong>Contacts</strong> with the "Affiliate" filter.</p>
+
+  <h3>Creating an affiliate manually</h3>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num"></div>
+      <div class="step-content"><h4>Open the contact form</h4><p>Go to Contacts → New (or find an existing customer).</p></div>
+    </div>
+    <div class="step">
+      <div class="step-num"></div>
+      <div class="step-content"><h4>Enable Is Affiliate</h4><p>Check the <strong>Is Affiliate / Referrer</strong> checkbox in the MLM Affiliate tab. A referral code is auto-generated.</p></div>
+    </div>
+    <div class="step">
+      <div class="step-num"></div>
+      <div class="step-content"><h4>Set the upline (optional)</h4><p>In the <strong>Referred By (Upline)</strong> field, select the affiliate who recruited this person. This determines the commission chain.</p></div>
+    </div>
+    <div class="step">
+      <div class="step-num"></div>
+      <div class="step-content"><h4>Share the referral link</h4><p>The <strong>Referral Link</strong> field shows the full URL. Copy it and send to the affiliate — they share this with potential customers.</p></div>
+    </div>
+  </div>
+
+  <h3>Affiliate application flow (when enabled)</h3>
+  <p>When <strong>Require Application Approval</strong> is enabled in settings, new affiliates registered via the portal start with <code>affiliate_status = pending</code> and cannot generate commissions until approved.</p>
+
+  <div class="flow-diagram">
+    <div class="flow-node">Customer signs up<br><small>via /affiliate portal</small></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node" style="background:#fff4e0;border-color:#c08020;color:#8a6010">Status: Pending Review</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node">Admin reviews<br>application</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node green">Approved<br>→ can earn</div>
+  </div>
+
+  <p>To approve: open the partner form → click <strong>Approve Affiliate</strong> button. To reject: click <strong>Reject Affiliate</strong>.</p>
+</section>
+
+<!-- COMMISSIONS -->
+<section id="commissions">
+  <h2>Commissions</h2>
+  <p>Commission records are found under <strong>MLM Affiliate → Commissions</strong>. Each record represents one commission earned by one affiliate for one order line at one level.</p>
+
+  <div class="mockup">
+    <div class="mockup-bar"><div class="mockup-dot r"></div><div class="mockup-dot y"></div><div class="mockup-dot g"></div><div class="mockup-url">localhost:8069/odoo/mlm-affiliate/commissions</div></div>
+    <div class="mockup-body">
+      <div class="odoo-nav"><div class="odoo-nav-app active">MLM Affiliate</div></div>
+      <div class="odoo-breadcrumb">Commissions</div>
+      <div style="padding:12px 20px;display:flex;gap:8px;border-bottom:1px solid #e5e3df">
+        <select style="border:1px solid #d0ccc8;border-radius:6px;padding:6px 10px;font-size:13px;color:#3a3835;font-family:DM Sans,sans-serif"><option>All Statuses</option></select>
+        <select style="border:1px solid #d0ccc8;border-radius:6px;padding:6px 10px;font-size:13px;color:#3a3835;font-family:DM Sans,sans-serif"><option>This Month</option></select>
+      </div>
+      <table class="odoo-list">
+        <thead>
+          <tr>
+            <th>Reference</th><th>Earner</th><th>Sale Order</th><th>Level</th><th>Amount</th><th>Payout</th><th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>MLM/2026/0042</code></td>
+            <td>Sarah Ahmed</td>
+            <td>S00142</td>
+            <td>L1 (60%)</td>
+            <td><strong>৳ 1,800</strong></td>
+            <td>Wallet</td>
+            <td><span class="badge badge-approved">Approved</span></td>
+          </tr>
+          <tr>
+            <td><code>MLM/2026/0043</code></td>
+            <td>Rahim Khan</td>
+            <td>S00142</td>
+            <td>L2 (20%)</td>
+            <td><strong>৳ 600</strong></td>
+            <td>Bank</td>
+            <td><span class="badge badge-approved">Approved</span></td>
+          </tr>
+          <tr>
+            <td><code>MLM/2026/0044</code></td>
+            <td>Mina Begum</td>
+            <td>S00143</td>
+            <td>L1 (60%)</td>
+            <td><strong>৳ 2,400</strong></td>
+            <td>Wallet</td>
+            <td><span class="badge badge-pending">Pending</span></td>
+          </tr>
+          <tr>
+            <td><code>MLM/2026/0045</code></td>
+            <td>Karim Hossain</td>
+            <td>S00143</td>
+            <td>L2 (20%)</td>
+            <td><strong>৳ 800</strong></td>
+            <td>Wallet</td>
+            <td><span class="badge badge-pending">On Hold</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <h3>Commission states</h3>
+  <table class="data-table">
+    <thead><tr><th>State</th><th>Meaning</th><th>Transition</th></tr></thead>
+    <tbody>
+      <tr><td><span class="badge badge-pending">Pending</span></td><td>Created when sale order confirmed. Not yet payable.</td><td>Auto-approved when invoice is paid (if no hold period active)</td></tr>
+      <tr><td><span class="badge badge-approved">Approved</span></td><td>Commission is valid and included in wallet balance.</td><td>Manually click "Mark as Paid" or via payout request</td></tr>
+      <tr><td><span class="badge badge-paid">Paid</span></td><td>Deducted from wallet or paid out via bank. Final state.</td><td>—</td></tr>
+      <tr><td><span class="badge badge-cancelled">Cancelled</span></td><td>Commission void — refund received or manually cancelled.</td><td>Can reset to Pending if needed</td></tr>
+    </tbody>
+  </table>
+
+  <h3>On-hold commissions</h3>
+  <p>If a <strong>Commission Hold Period</strong> is configured in settings (e.g. 14 days), newly created commissions are locked with a <code>hold_until</code> date. The auto-approval cron runs nightly and releases held commissions once their hold date passes.</p>
+</section>
+
+<!-- PAYOUTS -->
+<section id="payouts">
+  <h2>Payout Requests</h2>
+  <p>Affiliates submit payout requests from the portal. Admins review and process them under <strong>MLM Affiliate → Payout Requests</strong>.</p>
+
+  <h3>Payout workflow</h3>
+  <div class="flow-diagram">
+    <div class="flow-node" style="background:#f3f1eb;border-color:#9b9591;color:#6a6562">Draft (Submitted)</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node" style="background:#fff4e0;border-color:#c08020;color:#8a6010">Approved</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node green">Paid</div>
+  </div>
+
+  <h3>Processing a payout request</h3>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num"></div>
+      <div class="step-content"><h4>Review the request</h4><p>Open the request. Check the affiliate's bank account, amount requested, and the linked commission records.</p></div>
+    </div>
+    <div class="step">
+      <div class="step-num"></div>
+      <div class="step-content"><h4>Approve</h4><p>Click <strong>Approve</strong>. The request moves to Approved state. The commissions are not yet marked as paid.</p></div>
+    </div>
+    <div class="step">
+      <div class="step-num"></div>
+      <div class="step-content"><h4>Process payment externally</h4><p>Transfer the amount to the affiliate's bank account or mobile wallet via your banking system.</p></div>
+    </div>
+    <div class="step">
+      <div class="step-num"></div>
+      <div class="step-content"><h4>Mark as Paid</h4><p>Click <strong>Mark as Paid</strong>. All linked commissions are automatically moved to Paid state. The affiliate's wallet balance updates immediately.</p></div>
+    </div>
+  </div>
+
+  <div class="callout callout-warn">
+    <div class="callout-icon">⚠️</div>
+    <div class="callout-content">
+      <div class="callout-title">Minimum payout threshold</div>
+      <p>If a minimum payout amount is set in Settings, attempting to mark a commission as Paid when its amount is below the threshold will raise a validation error. The threshold applies per commission record, not per payout request total.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ACCOUNTING -->
+<section id="accounting">
+  <h2>Accounting Integration</h2>
+  <p>When a commission is approved, the system automatically posts a journal entry to record the liability.</p>
+
+  <table class="data-table">
+    <thead><tr><th>Account</th><th>Side</th><th>Code</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td>MLM Commission Expense</td><td>Debit</td><td>501108</td><td>Records the cost as a marketing/sales expense</td></tr>
+      <tr><td>MLM Commission Payable</td><td>Credit</td><td>300201</td><td>Records the liability owed to the affiliate</td></tr>
+    </tbody>
+  </table>
+
+  <p>The journal entry reference includes the commission record number and affiliate name. When the payout is processed, create a manual payment entry in Accounting to debit 300201 and credit your bank account.</p>
+
+  <div class="callout callout-tip">
+    <div class="callout-icon">💡</div>
+    <div class="callout-content">
+      <div class="callout-title">Want to use different accounts?</div>
+      <p>You can change the accounts any time in <strong>Settings → MLM Affiliate → Accounting</strong>. The new accounts will apply to future commissions. Existing journal entries are not affected.</p>
+    </div>
+  </div>
+</section>
+
+<!-- AFFILIATE PORTAL -->
+<section id="affiliate-portal">
+  <h2>Affiliate Portal</h2>
+  <p>Affiliates access their dashboard at <code>/my/affiliate</code> after logging into the website portal.</p>
+
+  <div class="mockup">
+    <div class="mockup-bar"><div class="mockup-dot r"></div><div class="mockup-dot y"></div><div class="mockup-dot g"></div><div class="mockup-url">yourstore.com/my/affiliate</div></div>
+    <div class="mockup-body" style="background:#f8f7f4;padding:20px">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">
+        <div class="portal-stat"><div class="val">৳ 12,400</div><div class="lbl">Wallet Balance</div></div>
+        <div class="portal-stat"><div class="val">৳ 48,200</div><div class="lbl">Total Earned</div></div>
+        <div class="portal-stat"><div class="val">23</div><div class="lbl">Direct Referrals</div></div>
+        <div class="portal-stat"><div class="val" style="font-size:20px">🥇 Gold</div><div class="lbl">Current Tier</div></div>
+      </div>
+      <div class="portal-card">
+        <div style="font-weight:600;font-size:14px;margin-bottom:12px;color:#3a3835">Monthly Earnings (Last 6 Months)</div>
+        <div class="mini-chart">
+          <div class="mini-bar" style="height:40%"></div>
+          <div class="mini-bar" style="height:55%"></div>
+          <div class="mini-bar" style="height:30%"></div>
+          <div class="mini-bar" style="height:70%"></div>
+          <div class="mini-bar" style="height:85%"></div>
+          <div class="mini-bar" style="height:60%"></div>
+        </div>
+        <div style="display:flex;gap:4px;margin-top:6px">
+          <div style="flex:1;text-align:center;font-size:11px;color:#9b9591">Jan</div>
+          <div style="flex:1;text-align:center;font-size:11px;color:#9b9591">Feb</div>
+          <div style="flex:1;text-align:center;font-size:11px;color:#9b9591">Mar</div>
+          <div style="flex:1;text-align:center;font-size:11px;color:#9b9591">Apr</div>
+          <div style="flex:1;text-align:center;font-size:11px;color:#9b9591">May</div>
+          <div style="flex:1;text-align:center;font-size:11px;color:#9b9591">Jun</div>
+        </div>
+      </div>
+      <div class="portal-card">
+        <div style="font-weight:600;font-size:14px;margin-bottom:12px;color:#3a3835">Your Referral Link</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <code style="flex:1;padding:8px 12px;background:#f3f1eb;border-radius:6px;font-size:13px">https://yourstore.com/ref/AB12CD34</code>
+          <button style="padding:8px 14px;background:#714B67;color:white;border:none;border-radius:6px;font-size:13px;cursor:default">Copy</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- REFERRAL LINK -->
+<section id="referral-link">
+  <h2>Referral Links &amp; Tracking</h2>
+  <p>Each affiliate has a unique 8-character referral code (e.g. <code>AB12CD34</code>). When a visitor arrives via the referral link, a cookie (<code>mlm_ref</code>) is set in their browser. When they confirm a sale order, the system reads the cookie and assigns the referrer.</p>
+
+  <h3>How referral attribution works</h3>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num"></div>
+      <div class="step-content"><h4>Visitor clicks referral link</h4><p><code>yourstore.com/ref/AB12CD34</code> → redirected to the shop homepage. A cookie <code>mlm_ref=AB12CD34</code> is set with a 30-day expiry.</p></div>
+    </div>
+    <div class="step">
+      <div class="step-num"></div>
+      <div class="step-content"><h4>Visitor adds to cart and proceeds</h4><p>On each cart update, the system reads the cookie and sets <code>referrer_partner_id</code> on the sale order.</p></div>
+    </div>
+    <div class="step">
+      <div class="step-num"></div>
+      <div class="step-content"><h4>Order confirmed</h4><p>Commissions are generated for all eligible products in the order.</p></div>
+    </div>
+  </div>
+
+  <div class="callout callout-tip">
+    <div class="callout-icon">💡</div>
+    <div class="callout-content">
+      <div class="callout-title">QR codes available on portal</div>
+      <p>Affiliates can view and download a QR code version of their referral link from the portal — useful for in-person events, printed materials, and social media.</p>
+    </div>
+  </div>
+</section>
+
+<!-- WALLET -->
+<section id="wallet">
+  <h2>Affiliate Wallet</h2>
+  <p>The wallet is a virtual credit balance. Approved wallet commissions accumulate here. Affiliates can spend their wallet balance at checkout or request a cash payout.</p>
+
+  <h3>Wallet balance calculation</h3>
+  <div class="tree">
+    Wallet Balance = <span class="amount">Approved wallet commissions</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;− <span class="highlight">Paid wallet commissions</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;− <span class="highlight">Amount used in active orders</span>
+  </div>
+
+  <h3>Spending wallet at checkout</h3>
+  <p>On the checkout page, affiliates see a "Use Wallet Balance" option. Selecting it adds a negative-value line item to the order equal to the amount used, reducing the total payable.</p>
+
+  <div class="callout callout-danger">
+    <div class="callout-icon">🚫</div>
+    <div class="callout-content">
+      <div class="callout-title">Wallet discount line is protected</div>
+      <p>The wallet discount line has special handling to prevent Odoo's price recomputation from resetting it to $0. Do not manually modify this line in the sale order form — use the portal checkout flow instead.</p>
+    </div>
+  </div>
+</section>
+
+<!-- PAYOUT REQUEST -->
+<section id="payout-request">
+  <h2>Requesting a Payout (Affiliate)</h2>
+  <p>Affiliates submit payout requests from the portal at <code>/my/affiliate/payout/new</code>.</p>
+
+  <div class="mockup">
+    <div class="mockup-bar"><div class="mockup-dot r"></div><div class="mockup-dot y"></div><div class="mockup-dot g"></div><div class="mockup-url">yourstore.com/my/affiliate/payout/new</div></div>
+    <div class="mockup-body" style="background:#f8f7f4;padding:20px">
+      <div class="portal-card">
+        <div style="font-size:18px;font-weight:700;margin-bottom:16px;color:#3a3835">Request Payout</div>
+        <div style="margin-bottom:12px">
+          <div style="font-size:13px;font-weight:600;color:#5a5754;margin-bottom:4px">Available Balance</div>
+          <div style="font-size:24px;font-weight:700;color:#2a6b3a">৳ 12,400.00</div>
+        </div>
+        <div style="margin-bottom:12px">
+          <div style="font-size:13px;font-weight:600;color:#5a5754;margin-bottom:4px">Amount Requested</div>
+          <input style="border:1px solid #d0ccc8;border-radius:6px;padding:8px 12px;font-size:14px;width:200px" value="10000" readonly>
+        </div>
+        <div style="margin-bottom:12px">
+          <div style="font-size:13px;font-weight:600;color:#5a5754;margin-bottom:4px">Payout Method</div>
+          <select style="border:1px solid #d0ccc8;border-radius:6px;padding:8px 12px;font-size:14px;width:200px"><option>Bank Transfer</option></select>
+        </div>
+        <div style="margin-bottom:16px">
+          <div style="font-size:13px;font-weight:600;color:#5a5754;margin-bottom:4px">Bank Account / IBAN</div>
+          <input style="border:1px solid #d0ccc8;border-radius:6px;padding:8px 12px;font-size:14px;width:100%;max-width:400px" value="BD12 XXXX 0000 1234 5678 90" readonly>
+        </div>
+        <button style="background:#714B67;color:white;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:default">Submit Request</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMMISSION ENGINE -->
+<section id="commission-engine">
+  <h2>Commission Engine Reference</h2>
+
+  <h3>L1 split logic</h3>
+  <p>If the buyer has an upline partner (was referred by someone), and the current referrer is different from the buyer's upline, the Level 1 commission is split 50/50 between the two. This prevents commission conflicts when both a referral link and an upline relationship exist.</p>
+
+  <div class="tree">
+    Scenario: Buyer (upline = Alice) visits via Bob's referral link<br><br>
+    Normal L1 share: <span class="amount">$60 (60% of $100 pot)</span><br><br>
+    Split result:<br>
+    &nbsp;&nbsp;Bob receives → <span class="amount">$30</span> (half, from referral link)<br>
+    &nbsp;&nbsp;Alice receives → <span class="amount">$30</span> (half, as buyer's upline)
+  </div>
+
+  <h3>Self-referral prevention</h3>
+  <p>If the referrer is the same as the buyer (<code>referrer.id == buyer.id</code>), no commissions are generated for that order. This check runs inside the commission engine before any records are created.</p>
+
+  <h3>Commission engine processing order</h3>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num"></div>
+      <div class="step-content"><h4>Order confirmed</h4><p><code>sale.order.action_confirm()</code> triggers <code>_generate_mlm_commissions()</code>.</p></div>
+    </div>
+    <div class="step">
+      <div class="step-num"></div>
+      <div class="step-content"><h4>Per order line: find rule</h4><p><code>find_rule_for_product(product, pricelist)</code> searches the 6-tier priority chain and returns the best matching commission rule.</p></div>
+    </div>
+    <div class="step">
+      <div class="step-num"></div>
+      <div class="step-content"><h4>Calculate commission pot</h4><p><code>rule.compute_total_commission(price_subtotal, qty)</code> returns the total pot for this line.</p></div>
+    </div>
+    <div class="step">
+      <div class="step-num"></div>
+      <div class="step-content"><h4>Walk the upline chain</h4><p>Starting from the referrer (or buyer's upline), traverse <code>upline_partner_id</code> links up to <code>max_level</code> deep. Create one commission record per level per line.</p></div>
+    </div>
+    <div class="step">
+      <div class="step-num"></div>
+      <div class="step-content"><h4>Apply multipliers</h4><p>Each commission amount is multiplied by the recipient's active campaign multiplier × their tier multiplier.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- FRAUD -->
+<section id="fraud">
+  <h2>Fraud Protection</h2>
+
+  <table class="data-table">
+    <thead><tr><th>Protection</th><th>How it works</th><th>Configuration</th></tr></thead>
+    <tbody>
+      <tr><td>Self-referral prevention</td><td>No commissions generated if referrer = buyer</td><td>Always active, not configurable</td></tr>
+      <tr><td>Application approval</td><td>New affiliates must be approved by admin before earning</td><td>Settings → Require Application Approval</td></tr>
+      <tr><td>Commission hold period</td><td>Commissions locked for N days after creation — cannot approve during return window</td><td>Settings → Commission Hold Period (Days)</td></tr>
+      <tr><td>Refund clawback</td><td>When a validated credit note is created, all pending/approved commissions on the original order are automatically cancelled</td><td>Always active</td></tr>
+      <tr><td>Minimum payout threshold</td><td>Commissions below a threshold cannot be marked as Paid</td><td>Settings → Minimum Payout Amount</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- EMAILS -->
+<section id="emails">
+  <h2>Email Notifications</h2>
+
+  <table class="data-table">
+    <thead><tr><th>Trigger</th><th>Template</th><th>Recipients</th></tr></thead>
+    <tbody>
+      <tr><td>Commission approved</td><td><code>email_template_commission_approved</code></td><td>Earning affiliate</td></tr>
+      <tr><td>Commission paid</td><td><code>email_template_commission_paid</code></td><td>Earning affiliate</td></tr>
+      <tr><td>Monthly summary</td><td><code>email_template_monthly_summary</code></td><td>All active affiliates with email</td></tr>
+    </tbody>
+  </table>
+
+  <p>The monthly summary cron runs on the 1st of each month and sends previous month's totals. It can be disabled in Settings → Send Monthly Summary Emails.</p>
+</section>
+
+<!-- FAQ -->
+<section id="faq">
+  <h2>Frequently Asked Questions</h2>
+
+  <h3>The accounts and journal were created but not linked to Settings. Why?</h3>
+  <p>This happens when the module was first installed with the old version that had invalid account codes (MLM-EXP / MLM-PAY with hyphens). The <code>env.ref()</code> lookup fails silently because the XML IDs were never registered. Upgrade to v2.30 (18.0.2.18.0) — the migration script automatically wires up the links on upgrade.</p>
+
+  <h3>A commission shows "On Hold" and won't approve. Why?</h3>
+  <p>The commission's <code>hold_until</code> date hasn't passed yet. This is determined by the <strong>Commission Hold Period</strong> in settings. Wait until the hold date, or reduce the hold period in settings (future commissions only). The nightly cron (<code>_cron_release_held_commissions</code>) automatically approves expired holds.</p>
+
+  <h3>Why did a commission get cancelled automatically?</h3>
+  <p>A credit note (refund) was validated for the original invoice. The refund clawback system cancels all pending/approved commissions linked to the original sale order. This is by design to prevent paying commissions on returned goods.</p>
+
+  <h3>Can I change the commission accounts after installation?</h3>
+  <p>Yes. Go to Settings → MLM Affiliate → Accounting and change the fields. The new accounts apply to future commissions only. Existing approved journal entries are not affected.</p>
+
+  <h3>An affiliate isn't getting commissions even though they have a referral link. Why?</h3>
+  <p>Check these in order: (1) Is the affiliate's <code>affiliate_status</code> set to "Approved"? (2) Is the commission hold period preventing approval? (3) Does a commission rule exist for the products in the order? (4) Is the customer the same person as the affiliate (self-referral)? (5) Was the referral cookie set before the order was confirmed?</p>
+
+  <h3>The wallet balance looks wrong for an affiliate. How is it calculated?</h3>
+  <p>Wallet balance = sum of approved wallet commissions − sum of paid wallet commissions − wallet amounts used in active (non-cancelled) sale orders. Check the affiliate's commission list and filter by payout method = Wallet to verify each component.</p>
+
+  <h3>Can I use this module with Odoo Community?</h3>
+  <p>Yes. The module depends only on <code>sale_management</code>, <code>account</code>, <code>website_sale</code>, <code>portal</code>, <code>auth_signup</code>, <code>mail</code>, and <code>base_setup</code> — all of which are available in Odoo 18 Community Edition.</p>
+</section>
+
+</article>
+</div>
+</div>
+
+<script>
+// Highlight active nav link based on scroll position
+const sections = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('.nav-section a');
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      navLinks.forEach(a => {
+        a.classList.toggle('active', a.getAttribute('href') === '#' + entry.target.id);
+      });
+    }
+  });
+}, { rootMargin: '-20% 0px -75% 0px' });
+
+sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

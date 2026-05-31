@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!--
+        Default accounting setup for MLM Affiliate commissions.
+        noupdate=1 — admins can reconfigure without losing changes on upgrade.
+
+        Creates:
+        1. Commission Expense account  (type: expense)
+        2. Commission Payable account  (type: current liability)
+        3. MLM Commission journal      (type: general / miscellaneous)
+
+        The hooks.py post_init_hook writes account/journal IDs into
+        ir.config_parameter so mlm_commission._create_accounting_entry()
+        picks them up automatically.
+    -->
+
+    <!-- 1. Commission Expense Account -->
+    <record id="account_mlm_commission_expense" model="account.account">
+        <field name="name">MLM Commission Expense</field>
+        <field name="code">501108</field>
+        <field name="account_type">expense</field>
+        <field name="reconcile" eval="False"/>
+    </record>
+
+    <!-- 2. Commission Payable Account (current liability) -->
+    <record id="account_mlm_commission_payable" model="account.account">
+        <field name="name">MLM Commission Payable</field>
+        <field name="code">300201</field>
+        <field name="account_type">liability_current</field>
+        <field name="reconcile" eval="True"/>
+    </record>
+
+    <!-- 3. MLM Commission Journal -->
+    <record id="journal_mlm_commission" model="account.journal">
+        <field name="name">MLM Commissions</field>
+        <field name="code">MLMC</field>
+        <field name="type">general</field>
+    </record>
+
+</odoo>
