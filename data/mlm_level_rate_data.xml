@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!--
+        Default MLM commission level rates.
+        noupdate=1 so admins can change rates without them resetting on upgrade.
+        L1=70%, L2=15%, L3=10%, L4=5%
+    -->
+    <record id="mlm_level_rate_l1" model="mlm.level.rate">
+        <field name="level">1</field>
+        <field name="description">Level 1</field>
+        <field name="rate">70.0</field>
+        <field name="active" eval="True"/>
+    </record>
+    <record id="mlm_level_rate_l2" model="mlm.level.rate">
+        <field name="level">2</field>
+        <field name="description">Level 2</field>
+        <field name="rate">15.0</field>
+        <field name="active" eval="True"/>
+    </record>
+    <record id="mlm_level_rate_l3" model="mlm.level.rate">
+        <field name="level">3</field>
+        <field name="description">Level 3</field>
+        <field name="rate">10.0</field>
+        <field name="active" eval="True"/>
+    </record>
+    <record id="mlm_level_rate_l4" model="mlm.level.rate">
+        <field name="level">4</field>
+        <field name="description">Level 4</field>
+        <field name="rate">5.0</field>
+        <field name="active" eval="True"/>
+    </record>
+</odoo>

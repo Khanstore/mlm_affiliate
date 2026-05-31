@@ -17,9 +17,8 @@ class AccountMove(models.Model):
     def write(self, vals):
         # Capture pre-write payment states for comparison after write
         # (payment_state is computed in Odoo 18 — not always in vals)
-        pre_states = {}
-        if 'payment_state' in vals or True:
-            pre_states = {m.id: m.payment_state for m in self}
+        # Always capture pre-states; payment_state is computed in Odoo 18
+        pre_states = {m.id: m.payment_state for m in self}
 
         res = super().write(vals)
 

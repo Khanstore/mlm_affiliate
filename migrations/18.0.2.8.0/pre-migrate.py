@@ -42,7 +42,7 @@ def migrate(cr, version):
     # Reset list_price to 0
     _safe(cr, 'reset_price', """
         UPDATE product_template
-        SET list_price = 0.0, standard_price = 0.0
+        SET list_price = 0.0
         WHERE id = %s
     """, (tmpl_id,))
 

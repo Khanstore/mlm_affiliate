@@ -54,10 +54,13 @@ class SaleOrder(models.Model):
             neg = -abs(self.wallet_amount_used)
             cr = self.env.cr
             for line in wallet_lines:
-                if line.price_unit >= 0:
+                if abs(line.price_unit - neg) > 0.001:  # needs correction
                     cr.execute(
-                        "UPDATE sale_order_line SET price_unit = %s, discount = 0.0 WHERE id = %s",
-                        (neg, line.id)
+                        """UPDATE sale_order_line
+                           SET price_unit = %s, discount = 0.0,
+                               price_subtotal = %s, price_total = %s
+                           WHERE id = %s""",
+                        (neg, neg, neg, line.id)
                     )
                     cr.execute(
                         "DELETE FROM account_tax_sale_order_line_rel WHERE sale_order_line_id = %s",
@@ -66,7 +69,7 @@ class SaleOrder(models.Model):
             self.sudo().invalidate_recordset(
                 ["order_line", "amount_untaxed", "amount_tax", "amount_total"])
         except Exception:
-            pass  # Never break checkout flow
+            _logger.exception('MLM: _mlm_reapply_wallet_line_sql failed')
 
     def _attach_referrer_from_cookie(self):
         try:
@@ -92,9 +95,31 @@ class SaleOrder(models.Model):
     # ── Commission engine ─────────────────────────────────────────────────────
 
     def action_confirm(self):
-        res = super().action_confirm()
+        # Protect wallet lines BEFORE confirm — Odoo recomputes all lines during confirm
         for order in self:
-            if order.referrer_partner_id and not order.commission_ids:
+            if order.wallet_amount_used > 0:
+                order._mlm_reapply_wallet_line_sql()
+
+        res = super().action_confirm()
+
+        # Re-protect wallet lines AFTER confirm — super() may have reset price_unit again
+        for order in self:
+            if order.wallet_amount_used > 0:
+                order._mlm_reapply_wallet_line_sql()
+
+            if order.commission_ids:
+                continue  # already generated
+            # Primary: referrer set from referral link cookie
+            if not order.referrer_partner_id:
+                # Fallback: buyer has an upline (direct referral relationship)
+                buyer_upline = order.partner_id.upline_partner_id
+                if buyer_upline and buyer_upline.id != order.partner_id.id:
+                    if buyer_upline.affiliate_status == "approved":
+                        order.sudo().write({
+                            "referrer_partner_id": buyer_upline.id,
+                            "referral_code_used": buyer_upline.referral_code or "",
+                        })
+            if order.referrer_partner_id:
                 order._generate_mlm_commissions()
         return res
 
@@ -106,6 +131,20 @@ class SaleOrder(models.Model):
             )
             if cancellable:
                 cancellable.action_cancel()
+            # Release wallet credit so balance is restored
+            if order.wallet_amount_used > 0:
+                # Remove the wallet discount order line
+                wallet_tmpl = order.env.ref(
+                    'mlm_affiliate.product_wallet_discount', raise_if_not_found=False)
+                if wallet_tmpl:
+                    wallet_pid = wallet_tmpl.sudo().product_variant_id.id
+                    wallet_lines = order.order_line.filtered(
+                        lambda l: l.product_id.id == wallet_pid)
+                    wallet_lines.sudo().unlink()
+                order.sudo().write({
+                    'wallet_amount_used': 0.0,
+                    'wallet_partner_id': False,
+                })
         return res
 
     def _generate_mlm_commissions(self):
@@ -152,8 +191,16 @@ class SaleOrder(models.Model):
         if referrer.id == buyer.id:
             return
 
+        # Get wallet product id to skip it in commission calculation
+        wallet_tmpl = self.env.ref(
+            'mlm_affiliate.product_wallet_discount', raise_if_not_found=False)
+        wallet_pid = wallet_tmpl.sudo().product_variant_id.id if wallet_tmpl else None
+
         for line in self.order_line:
             if not line.product_id or line.price_subtotal <= 0:
+                continue
+            # Never generate commission on the wallet discount line itself
+            if wallet_pid and line.product_id.id == wallet_pid:
                 continue
             rule = RuleModel.find_rule_for_product(line.product_id, self.pricelist_id)
             if not rule:
@@ -169,6 +216,7 @@ class SaleOrder(models.Model):
 
                 if lr.level == 1 and do_l1_split:
                     half = round(level_amount / 2, 2)
+                    split_rate = round(lr.rate / 2, 4)  # each party gets half the rate
                     for recipient, split_with in [
                         (referrer, buyer_upline),
                         (buyer_upline, referrer),
@@ -187,7 +235,7 @@ class SaleOrder(models.Model):
                             'product_id': line.product_id.id,
                             'buyer_partner_id': buyer.id,
                             'level': 1,
-                            'level_rate': lr.rate,
+                            'level_rate': split_rate,  # show actual split rate (e.g. 35 not 70)
                             'total_commission': total_pot,
                             'amount': final_amount,
                             'campaign_multiplier': multiplier,
@@ -243,3 +291,30 @@ class SaleOrder(models.Model):
 class SaleOrderLine(models.Model):
     _inherit = 'sale.order.line'
     commission_ids = fields.One2many('mlm.commission', 'order_line_id', string='Commissions')
+
+    def _wallet_variant_id(self):
+        """Return the wallet discount product variant id, safe for all contexts."""
+        try:
+            tmpl = self.sudo().env.ref(
+                'mlm_affiliate.product_wallet_discount', raise_if_not_found=False)
+            return tmpl.sudo().product_variant_id.id if tmpl else None
+        except Exception:
+            return None
+
+    def _get_display_price(self):
+        """Prevent Odoo from resetting the wallet discount line price to list_price."""
+        wid = self._wallet_variant_id()
+        if wid and self.product_id.id == wid:
+            return self.price_unit
+        return super()._get_display_price()
+
+    def _compute_price_unit(self):
+        """Skip wallet discount lines — their price_unit is managed by SQL."""
+        wid = self._wallet_variant_id()
+        if not wid:
+            return super()._compute_price_unit()
+        wallet_lines = self.filtered(lambda l: l.product_id.id == wid)
+        other_lines  = self - wallet_lines
+        if other_lines:
+            super(SaleOrderLine, other_lines)._compute_price_unit()
+        # wallet_lines: do nothing — preserve the SQL-written negative price_unit

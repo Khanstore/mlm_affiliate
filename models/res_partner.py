@@ -73,7 +73,8 @@ class ResPartner(models.Model):
         digits=(16, 2))
     wallet_order_ids = fields.One2many(
         'sale.order', 'wallet_partner_id', string='Wallet Orders',
-        domain=[('state', 'in', ['sale', 'done'])])
+        domain=[('state', 'in', ['draft', 'sent', 'sale', 'done']),
+                ('wallet_amount_used', '>', 0)])
     referral_url = fields.Char(string='Referral Link', compute='_compute_referral_url')
 
     # Affiliate application status

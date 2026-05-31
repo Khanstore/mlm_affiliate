@@ -68,7 +68,6 @@ class AffiliatePortal(CustomerPortal):
                 'name': 'Affiliate Wallet Credit',
                 'type': 'service',
                 'list_price': 0.0,
-                'standard_price': 0.0,
                 'sale_ok': True,
                 'purchase_ok': False,
                 'website_published': False,
@@ -79,7 +78,7 @@ class AffiliatePortal(CustomerPortal):
         # Self-heal: if list_price was changed to non-zero by an admin, reset it
         prod_tmpl = prod_tmpl.sudo()
         if prod_tmpl.list_price != 0.0 or prod_tmpl.taxes_id:
-            prod_tmpl.write({'list_price': 0.0, 'standard_price': 0.0, 'taxes_id': [(5, 0, 0)]})
+            prod_tmpl.write({'list_price': 0.0, 'taxes_id': [(5, 0, 0)]})
 
         return prod_tmpl.product_variant_id
 
@@ -98,43 +97,52 @@ class AffiliatePortal(CustomerPortal):
         existing = order.sudo().order_line.filtered(
             lambda l: l.product_id.id == product.id)
 
+        neg = -abs(amount)
+
         if existing:
             if len(existing) > 1:
                 existing[1:].sudo().unlink()
             line_id = existing[0].id
         else:
-            # Create via ORM (handles required fields / UoM lookup)
-            new_vals = {
+            # Create via ORM with no_recompute context to minimise onchange side-effects
+            env = request.env
+            SolSudo = env['sale.order.line'].sudo().with_context(
+                no_recompute=True,
+                mail_notrack=True,
+            )
+            new_line = SolSudo.create({
+                'order_id':        order.id,
                 'product_id':      product.id,
                 'name':            'Affiliate Wallet Credit',
                 'product_uom_qty': 1,
                 'price_unit':      0.0,
-                'tax_id':          [(5, 0, 0)],
-            }
-            order.sudo().write({'order_line': [(0, 0, new_vals)]})
-            # Refresh to get the new line id
-            order.sudo().invalidate_recordset(['order_line'])
-            new_line = order.sudo().order_line.filtered(
-                lambda l: l.product_id.id == product.id)
-            if not new_line:
-                _logger.error('MLM wallet: failed to create discount line')
-                return
-            line_id = new_line[-1].id
+                'discount':        0.0,
+                'sequence':        999,
+            })
+            line_id = new_line.id
 
-        neg = -abs(amount)
-
-        # Odoo 18: price_reduce does NOT exist as a column (it is computed).
-        # Only update price_unit and discount directly.
+        # Overwrite price_unit via SQL to bypass ORM onchanges/computes
         cr.execute(
-            'UPDATE sale_order_line SET price_unit = %s, discount = 0.0 WHERE id = %s',
+            "UPDATE sale_order_line SET price_unit = %s, discount = 0.0 WHERE id = %s",
             (neg, line_id)
         )
 
-        # Odoo 18 tax relation table is account_tax_sale_order_line_rel
+        # Clear any taxes on this line (Odoo 18 table name)
         cr.execute(
-            'DELETE FROM account_tax_sale_order_line_rel WHERE sale_order_line_id = %s',
+            "DELETE FROM account_tax_sale_order_line_rel WHERE sale_order_line_id = %s",
             (line_id,)
         )
+
+        # Recompute price_subtotal/price_total on the line from the new price_unit
+        line_rec = request.env['sale.order.line'].sudo().browse(line_id)
+        line_rec.invalidate_recordset()
+        # Trigger recompute of stored monetary fields using the corrected price_unit
+        cr.execute("""
+            UPDATE sale_order_line
+            SET price_subtotal = %s,
+                price_total    = %s
+            WHERE id = %s
+        """, (neg, neg, line_id))
 
         # Invalidate ORM cache so amount_total recomputes from DB
         order.sudo().invalidate_recordset(['order_line', 'amount_untaxed',
@@ -294,12 +302,14 @@ class AffiliatePortal(CustomerPortal):
         paid_wallet     = commissions.filtered(
             lambda c: c.state == 'paid' and c.payout_method == 'wallet')
 
+        # Use the stored computed field to avoid double-counting draft orders
+        wallet_balance = round(partner.affiliate_wallet_balance, 2)
         wallet_orders = request.env['sale.order'].sudo().search([
             ('wallet_partner_id', '=', partner.id),
-            ('state', 'in', ['sale', 'done']),
+            ('state', 'in', ['draft', 'sent', 'sale', 'done']),
+            ('wallet_amount_used', '>', 0),
         ])
-        wallet_spent   = round(sum(wallet_orders.mapped('wallet_amount_used')), 2)
-        wallet_balance = round(_sum(approved_wallet) - _sum(paid_wallet) - wallet_spent, 2)
+        wallet_spent = round(sum(wallet_orders.mapped('wallet_amount_used')), 2)
 
         # ── BUG FIX: compute sub-totals individually as plain Python floats ──
         pending_total  = _sum(commissions.filtered(lambda c: c.state == 'pending'))
@@ -312,7 +322,7 @@ class AffiliatePortal(CustomerPortal):
             'pending':          pending_total,
             'approved':         approved_total,
             'paid':             paid_total,
-            'wallet_balance':   wallet_balance,
+            'wallet_balance':   wallet_balance,  # uses partner.affiliate_wallet_balance
             'wallet_spent':     wallet_spent,
             'commission_count': len(non_cancelled),
             'click_count':      partner.referral_click_count,
@@ -409,7 +419,7 @@ class AffiliatePortal(CustomerPortal):
             ('state', '=', 'approved'),
             ('payout_method', '=', 'wallet'),
         ])
-        request.env['mlm.payout.request'].sudo().create({
+        payout_req = request.env['mlm.payout.request'].sudo().create({
             'partner_id':       partner.id,
             'amount_requested': amount,
             'payout_method':    payout_method,
@@ -417,6 +427,24 @@ class AffiliatePortal(CustomerPortal):
             'note':             note,
             'commission_ids':   [(6, 0, approved_comms.ids)],
         })
+        # Notify admin users with MLM access
+        try:
+            admin_users = request.env['res.users'].sudo().search([
+                ('groups_id', 'in', [request.env.ref('mlm_affiliate.group_mlm_manager').id]),
+                ('email', '!=', False),
+            ])
+            if admin_users:
+                payout_req.sudo().message_post(
+                    body=(
+                        f'New payout request <b>{payout_req.name}</b> submitted by '
+                        f'<b>{partner.name}</b> for amount <b>{amount:.2f}</b> '
+                        f'via {payout_method}.'
+                    ),
+                    partner_ids=admin_users.mapped('partner_id').ids,
+                    subtype_xmlid='mail.mt_comment',
+                )
+        except Exception:
+            _logger.exception('MLM: failed to notify admin of payout request %s', payout_req.name)
         return request.redirect('/my/affiliate?payout_submitted=1')
 
 
@@ -457,3 +485,9 @@ class AffiliateSignupController(AuthSignupHome):
         })
         if not partner.referral_code:
             partner.sudo().action_generate_referral_code()
+        # Clear the referral cookie — upline is now permanently linked
+        # so the cookie is no longer needed and should not be reused
+        try:
+            request.future_response.set_cookie('mlm_ref', '', max_age=0, expires=0)
+        except Exception:
+            pass

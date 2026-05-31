@@ -314,7 +314,12 @@ class MlmCommission(models.Model):
         ])
         if held:
             _logger.info('MLM: releasing %d held commissions', len(held))
-            held.action_approve()
+            # action_approve may return a notification dict — ignore it in cron context
+            for commission in held:
+                try:
+                    commission.action_approve()
+                except Exception:
+                    _logger.exception('MLM: auto-approve failed for commission %s', commission.name)
 
     # ── Static helpers ────────────────────────────────────────────────────────
 

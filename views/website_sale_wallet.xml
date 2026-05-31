@@ -164,7 +164,11 @@
 
             document.addEventListener('DOMContentLoaded', function () {
                 var path = window.location.pathname;
-                if (path.indexOf('/shop/cart') === -1 && path.indexOf('/shop/checkout') === -1) return;
+                var isCheckoutPage = (
+                    path.indexOf('/shop/cart') !== -1 ||
+                    path.indexOf('/shop/checkout') !== -1
+                );
+                if (!isCheckoutPage) return;
                 rpc('/shop/wallet/status', {}, function(err, data) {
                     if (!err && data) inject(data);
                 });

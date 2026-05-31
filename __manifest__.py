@@ -1,6 +1,6 @@
 {
     'name': 'MLM Affiliate',
-    'version': '18.0.2.9.0',
+    'version': '18.0.2.16.0',
     'category': 'Sales/Affiliate',
     'summary': 'Multi-level affiliate commissions with wallet, accounting, campaigns, milestones and fraud protection.',
     'description': """
@@ -43,6 +43,7 @@ Features:
         # Data
         'data/sequence_data.xml',
         'data/wallet_discount_product.xml',
+        'data/mlm_level_rate_data.xml',
         'data/cron_data.xml',
         'data/mail_templates.xml',
         # Backend views
