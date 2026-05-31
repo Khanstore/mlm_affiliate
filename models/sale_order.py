@@ -31,7 +31,42 @@ class SaleOrder(models.Model):
         )
         if not self.referrer_partner_id:
             self._attach_referrer_from_cookie()
+        # Re-protect the wallet discount line after any cart update,
+        # because Odoo ORM recomputes price_unit from list_price on all lines.
+        if self.wallet_amount_used > 0:
+            self._mlm_reapply_wallet_line_sql()
         return result
+
+    def _mlm_reapply_wallet_line_sql(self):
+        """Fix wallet discount line price_unit via SQL after ORM resets it."""
+        try:
+            prod_tmpl = self.env.ref(
+                "mlm_affiliate.product_wallet_discount", raise_if_not_found=False)
+            if not prod_tmpl:
+                return
+            product = prod_tmpl.sudo().product_variant_id
+            if not product:
+                return
+            wallet_lines = self.order_line.filtered(
+                lambda l: l.product_id.id == product.id)
+            if not wallet_lines:
+                return
+            neg = -abs(self.wallet_amount_used)
+            cr = self.env.cr
+            for line in wallet_lines:
+                if line.price_unit >= 0:
+                    cr.execute(
+                        "UPDATE sale_order_line SET price_unit = %s, discount = 0.0 WHERE id = %s",
+                        (neg, line.id)
+                    )
+                    cr.execute(
+                        "DELETE FROM account_tax_sale_order_line_rel WHERE sale_order_line_id = %s",
+                        (line.id,)
+                    )
+            self.sudo().invalidate_recordset(
+                ["order_line", "amount_untaxed", "amount_tax", "amount_total"])
+        except Exception:
+            pass  # Never break checkout flow
 
     def _attach_referrer_from_cookie(self):
         try:
@@ -138,9 +173,11 @@ class SaleOrder(models.Model):
                         (referrer, buyer_upline),
                         (buyer_upline, referrer),
                     ]:
-                        # Apply campaign multiplier per recipient
+                        # Apply campaign + tier multiplier per recipient
                         campaign = CampaignModel.get_active_campaign(recipient.id)
                         multiplier = campaign.commission_multiplier if campaign else 1.0
+                        tier_mult = recipient.tier_id.commission_multiplier if recipient.tier_id else 1.0
+                        multiplier = round(multiplier * tier_mult, 6)
                         final_amount = round(half * multiplier, 2)
                         Commission.create({
                             'partner_id': recipient.id,
@@ -168,8 +205,12 @@ class SaleOrder(models.Model):
                             continue
                         recipient = admin_partner
                         is_admin  = True
+                    # Apply campaign multiplier
                     campaign = CampaignModel.get_active_campaign(recipient.id)
                     multiplier = campaign.commission_multiplier if campaign else 1.0
+                    # Also apply tier multiplier (stacks with campaign)
+                    tier_mult = recipient.tier_id.commission_multiplier if recipient.tier_id else 1.0
+                    multiplier = round(multiplier * tier_mult, 6)
                     final_amount = round(level_amount * multiplier, 2)
                     Commission.create({
                         'partner_id': recipient.id,

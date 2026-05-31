@@ -106,27 +106,27 @@
                             <div class="col-12 col-md-7">
                                 <div class="row g-2 text-center mb-3">
                                     <div class="col-4">
-                                        <div class="p-2 rounded bg-warning bg-opacity-10 border border-warning">
-                                            <div class="fw-bold text-warning">
-                                                <t t-esc="'%.2f' % stats['pending']"/>
+                                        <div class="p-2 rounded border border-warning" style="background:#fff3cd;">
+                                            <div class="fw-bold fs-6" style="color:#7d5a00;">
+                                                <t t-esc="'%.2f' % (stats.get('pending') or 0.0)"/>
                                             </div>
-                                            <small class="text-muted">Pending</small>
+                                            <small style="color:#856404;">Pending</small>
                                         </div>
                                     </div>
                                     <div class="col-4">
-                                        <div class="p-2 rounded bg-info bg-opacity-10 border border-info">
-                                            <div class="fw-bold text-info">
-                                                <t t-esc="'%.2f' % stats['approved']"/>
+                                        <div class="p-2 rounded border border-info" style="background:#cff4fc;">
+                                            <div class="fw-bold fs-6" style="color:#055160;">
+                                                <t t-esc="'%.2f' % (stats.get('approved') or 0.0)"/>
                                             </div>
-                                            <small class="text-muted">Approved</small>
+                                            <small style="color:#055160;">Approved</small>
                                         </div>
                                     </div>
                                     <div class="col-4">
-                                        <div class="p-2 rounded bg-success bg-opacity-10 border border-success">
-                                            <div class="fw-bold text-success">
-                                                <t t-esc="'%.2f' % stats['paid']"/>
+                                        <div class="p-2 rounded border border-success" style="background:#d1e7dd;">
+                                            <div class="fw-bold fs-6" style="color:#0a3622;">
+                                                <t t-esc="'%.2f' % (stats.get('paid') or 0.0)"/>
                                             </div>
-                                            <small class="text-muted">Paid Out</small>
+                                            <small style="color:#0a3622;">Paid Out</small>
                                         </div>
                                     </div>
                                 </div>

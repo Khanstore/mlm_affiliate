@@ -69,7 +69,7 @@ class ResPartner(models.Model):
     total_commission_earned = fields.Float(
         string='Total Earned (All Time)',
         compute='_compute_total_commission_earned',
-        store=False,
+        store=True,
         digits=(16, 2))
     wallet_order_ids = fields.One2many(
         'sale.order', 'wallet_partner_id', string='Wallet Orders',
@@ -93,9 +93,11 @@ class ResPartner(models.Model):
         partner_ids = self.ids
         if not partner_ids:
             return
+        # Include draft/sent orders so balance reflects pending wallet usage
         wallet_orders = Order.search([
             ('wallet_partner_id', 'in', partner_ids),
-            ('state', 'in', ['sale', 'done']),
+            ('state', 'in', ['draft', 'sent', 'sale', 'done']),
+            ('wallet_amount_used', '>', 0),
         ])
         spent_by_partner = {}
         for wo in wallet_orders:
@@ -190,7 +192,6 @@ class ResPartner(models.Model):
                 # Create a bonus commission (no order_id required)
                 bonus = Commission.create({
                     'partner_id': self.id,
-                    'order_id': False,
                     'level': 0,
                     'amount': ms.bonus_amount,
                     'is_milestone_bonus': True,
@@ -198,6 +199,11 @@ class ResPartner(models.Model):
                     'state': 'approved',
                     'payout_method': 'wallet',
                 })
+                # Immediately create the accounting entry for this bonus
+                try:
+                    bonus._create_accounting_entry()
+                except Exception:
+                    pass
                 AwardModel.create({
                     'partner_id': self.id,
                     'milestone_id': ms.id,

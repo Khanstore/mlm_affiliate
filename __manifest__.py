@@ -1,6 +1,6 @@
 {
     'name': 'MLM Affiliate',
-    'version': '18.0.2.1.0',
+    'version': '18.0.2.9.0',
     'category': 'Sales/Affiliate',
     'summary': 'Multi-level affiliate commissions with wallet, accounting, campaigns, milestones and fraud protection.',
     'description': """
@@ -39,8 +39,10 @@ Features:
         # Security
         'security/mlm_security.xml',
         'security/ir.model.access.csv',
+        'security/mlm_record_rules.xml',
         # Data
         'data/sequence_data.xml',
+        'data/wallet_discount_product.xml',
         'data/cron_data.xml',
         'data/mail_templates.xml',
         # Backend views

@@ -1,0 +1,149 @@
+<odoo>
+
+    <!-- ============================================================
+         MLM Member Views
+    ============================================================ -->
+
+    <record id="view_mlm_member_tree" model="ir.ui.view">
+        <field name="name">mlm.member.tree</field>
+        <field name="model">mlm.member</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+                <field name="referral_code"/>
+                <field name="sponsor_id"/>
+                <field name="wallet_balance"/>
+                <field name="commission_count"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_mlm_member_form" model="ir.ui.view">
+        <field name="name">mlm.member.form</field>
+        <field name="model">mlm.member</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <!-- Smart button: commissions -->
+                    <div class="oe_button_box" name="button_box">
+                        <button name="%(action_mlm_commission)d"
+                                type="action"
+                                class="oe_stat_button"
+                                icon="fa-money">
+                            <field name="commission_count" widget="statinfo" string="Commissions"/>
+                        </button>
+                    </div>
+
+                    <group>
+                        <field name="name"/>
+                        <field name="partner_id"/>
+                        <field name="referral_code"/>
+                        <field name="sponsor_id"/>
+                        <field name="wallet_balance"/>
+                    </group>
+
+                    <notebook>
+                        <page string="Downlines">
+                            <field name="downline_ids">
+                                <tree>
+                                    <field name="name"/>
+                                    <field name="referral_code"/>
+                                    <field name="wallet_balance"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="Commissions">
+                            <field name="commission_ids">
+                                <tree>
+                                    <field name="order_id"/>
+                                    <field name="level"/>
+                                    <field name="percentage"/>
+                                    <field name="amount"/>
+                                    <field name="state"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_mlm_member" model="ir.actions.act_window">
+        <field name="name">MLM Members</field>
+        <field name="res_model">mlm.member</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <!-- ============================================================
+         MLM Commission Views
+    ============================================================ -->
+
+    <record id="view_mlm_commission_tree" model="ir.ui.view">
+        <field name="name">mlm.commission.tree</field>
+        <field name="model">mlm.commission</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="member_id"/>
+                <field name="order_id"/>
+                <field name="level"/>
+                <field name="percentage"/>
+                <field name="amount"/>
+                <field name="state"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_mlm_commission_form" model="ir.ui.view">
+        <field name="name">mlm.commission.form</field>
+        <field name="model">mlm.commission</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_mark_paid"
+                            string="Mark as Paid"
+                            type="object"
+                            class="btn-primary"
+                            attrs="{'invisible': [('state', '=', 'paid')]}"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,paid"/>
+                </header>
+                <sheet>
+                    <group>
+                        <field name="member_id"/>
+                        <field name="order_id"/>
+                        <field name="level"/>
+                        <field name="percentage"/>
+                        <field name="amount"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_mlm_commission" model="ir.actions.act_window">
+        <field name="name">MLM Commissions</field>
+        <field name="res_model">mlm.commission</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <!-- ============================================================
+         Menu Structure
+    ============================================================ -->
+
+    <menuitem id="mlm_root_menu"
+              name="MLM"
+              sequence="80"/>
+
+    <menuitem id="mlm_member_menu"
+              name="Members"
+              parent="mlm_root_menu"
+              action="action_mlm_member"
+              sequence="10"/>
+
+    <menuitem id="mlm_commission_menu"
+              name="Commissions"
+              parent="mlm_root_menu"
+              action="action_mlm_commission"
+              sequence="20"/>
+
+</odoo>

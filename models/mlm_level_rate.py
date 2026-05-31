@@ -42,7 +42,7 @@ class MlmLevelRate(models.Model):
         for rec in self:
             rec.level_label = f'Level {rec.level} ({rec.rate}%)'
 
-    @api.depends_context('uid')   # recompute per session so list footer refreshes
+    @api.depends()  # recomputes when any record in the set changes
     def _compute_total_rate(self):
         all_active = self.sudo().search([('active', '=', True)])
         total = sum(all_active.mapped('rate'))

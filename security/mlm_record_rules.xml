@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Portal users can only see their own commissions -->
+    <record id="rule_mlm_commission_portal" model="ir.rule">
+        <field name="name">MLM Commission: portal sees own only</field>
+        <field name="model_id" ref="mlm_affiliate.model_mlm_commission"/>
+        <field name="domain_force">[('partner_id.user_ids', 'in', [user.id])]</field>
+        <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
+        <field name="perm_read"   eval="True"/>
+        <field name="perm_write"  eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <!-- Portal users can only see their own payout requests -->
+    <record id="rule_mlm_payout_request_portal" model="ir.rule">
+        <field name="name">MLM Payout Request: portal sees own only</field>
+        <field name="model_id" ref="mlm_affiliate.model_mlm_payout_request"/>
+        <field name="domain_force">[('partner_id.user_ids', 'in', [user.id])]</field>
+        <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
+        <field name="perm_read"   eval="True"/>
+        <field name="perm_write"  eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <!-- MLM managers see everything (no restriction) -->
+    <record id="rule_mlm_commission_manager" model="ir.rule">
+        <field name="name">MLM Commission: managers see all</field>
+        <field name="model_id" ref="mlm_affiliate.model_mlm_commission"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('mlm_affiliate.group_mlm_manager'))]"/>
+        <field name="perm_read"   eval="True"/>
+        <field name="perm_write"  eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+</odoo>

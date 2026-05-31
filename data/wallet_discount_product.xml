@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="0">
+    <!--
+        This service product is used as a negative order line when the
+        affiliate wallet discount is applied to a cart.
+        noupdate=0 so it always resets to the correct values on upgrade.
+    -->
+    <record id="product_wallet_discount" model="product.template">
+        <field name="name">Affiliate Wallet Credit</field>
+        <field name="type">service</field>
+        <field name="list_price">0.0</field>
+        <field name="standard_price">0.0</field>
+        <field name="taxes_id" eval="[(5, 0, 0)]"/>
+        <field name="invoice_policy">order</field>
+        <field name="website_published" eval="False"/>
+        <field name="sale_ok"     eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="active"      eval="True"/>
+        <field name="description_sale">Applied affiliate wallet credit discount</field>
+    </record>
+</odoo>

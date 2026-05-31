@@ -1,91 +1,206 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!--
-        MLM Wallet Widget — shown on the cart page for logged-in users
-        with a positive affiliate wallet balance.
 
-        Odoo 18 COMPATIBILITY NOTE:
-        The website_sale.cart template in Odoo 18 is a thin wrapper that
-        calls sub-templates (cart_lines, cart_summary, etc.) via t-call.
-        Direct element XPaths like #cart_summary, .o_cart_total, or
-        //a[@href='/shop/checkout'] do NOT exist at the cart root level.
+<template id="cart_wallet_widget"
+          name="Cart: MLM Wallet Widget"
+          inherit_id="website_sale.cart">
+    <xpath expr="." position="inside">
+        <script type="text/javascript">
+        //<![CDATA[
+        (function () {
+            'use strict';
 
-        Strategy: We do NOT inherit website_sale.cart at all.
-        Instead we render the wallet block from the controller by passing
-        it as a t-call value, OR we use website_sale.cart_lines which
-        is the sub-template that actually contains the cart body.
+            function rpc(url, params, cb) {
+                fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ jsonrpc: '2.0', method: 'call', id: 1, params: params || {} })
+                }).then(function(r) { return r.json(); })
+                  .then(function(d) { cb(null, d.result); })
+                  .catch(function(e) { cb(e); });
+            }
 
-        We use inherit_id="website_sale.cart" with expr="."
-        position="inside" — appending to the root node — which always
-        works regardless of internal template structure changes.
-    -->
-    <template id="cart_wallet_section"
-              name="Cart: Wallet Payment Option"
-              inherit_id="website_sale.cart">
+            function buildCard(data) {
+                var applied  = data.applied  || 0;
+                var balance  = data.balance  || 0;
+                var covered  = data.fully_covered;
+                var csrf     = data.csrf_token || '';
 
-        <!-- expr="." targets the template root element itself.
-             position="inside" appends our block at the end of it.
-             This is the only XPath guaranteed to work in any Odoo version
-             since the root node always exists. -->
-        <xpath expr="." position="inside">
-            <t t-if="request.env.user and not request.env.user._is_public()">
-                <t t-set="mlm_partner" t-value="request.env.user.partner_id.sudo()"/>
-                <t t-set="mlm_wallet"  t-value="mlm_partner.affiliate_wallet_balance"/>
+                var noticeClass = applied > 0 ? '' : ' d-none';
+                var applyClass  = applied > 0 ? ' d-none' : '';
+                var removeClass = applied > 0 ? '' : ' d-none';
+                var payClass    = (applied > 0 && covered) ? '' : ' d-none';
 
-                <t t-if="mlm_wallet and mlm_wallet > 0">
-                    <div id="mlm_wallet_section"
-                         class="container my-3">
-                        <div class="card border-success shadow-sm">
-                            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
-                                <span class="fw-bold">
-                                    <i class="fa fa-money me-2" title="Commission"/>MLM Wallet Balance
-                                </span>
-                                <span class="badge bg-white text-success fs-6">
-                                    <t t-esc="'%.2f' % mlm_wallet"/>
-                                </span>
-                            </div>
-                            <div class="card-body py-2">
-                                <p class="mb-2 small text-muted">
-                                    You have
-                                    <strong class="text-success">
-                                        <t t-esc="'%.2f' % mlm_wallet"/>
-                                    </strong>
-                                    in your affiliate wallet.
-                                    Apply it to reduce or fully cover this order.
-                                </p>
-                                <div id="mlm_wallet_controls" class="d-flex gap-2 flex-wrap align-items-center">
-                                    <button id="mlm_apply_wallet"
-                                            type="button"
-                                            class="btn btn-success btn-sm">
-                                        <i class="fa fa-check me-1" title="Confirm"/>Apply Wallet Credit
-                                    </button>
-                                    <button id="mlm_remove_wallet"
-                                            type="button"
-                                            class="btn btn-outline-secondary btn-sm d-none">
-                                        <i class="fa fa-times me-1" title="Remove"/>Remove
-                                    </button>
-                                    <span id="mlm_wallet_feedback" class="small text-muted ms-2"/>
-                                </div>
+                return [
+                    '<div id="mlm_wallet_card" style="margin:16px 0">',
+                    '  <div class="card border-success shadow-sm">',
+                    '    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center py-2">',
+                    '      <span class="fw-bold"><i class="fa fa-money me-2"></i>MLM Wallet</span>',
+                    '      <span class="badge bg-white text-success px-3 fs-6">Balance: ' + balance.toFixed(2) + '</span>',
+                    '    </div>',
+                    '    <div class="card-body py-3">',
+                    '      <div id="mlm_applied_notice" class="alert alert-success py-2 mb-2' + noticeClass + '">',
+                    '        <i class="fa fa-check-circle me-1"></i>',
+                    '        <strong id="mlm_applied_val">' + applied.toFixed(2) + '</strong> wallet credit applied to this order.',
+                    '      </div>',
+                    '      <p class="mb-2 small text-muted">Apply your affiliate wallet credit to reduce or fully cover this order.</p>',
+                    '      <div class="d-flex gap-2 flex-wrap align-items-center">',
+                    '        <button id="mlm_apply_btn" type="button" class="btn btn-success btn-sm' + applyClass + '">',
+                    '          <i class="fa fa-check me-1"></i>Apply Wallet Credit',
+                    '        </button>',
+                    '        <button id="mlm_remove_btn" type="button" class="btn btn-outline-secondary btn-sm' + removeClass + '">',
+                    '          <i class="fa fa-times me-1"></i>Remove',
+                    '        </button>',
+                    '        <span id="mlm_feedback" class="small ms-2 text-muted"></span>',
+                    '      </div>',
+                    '      <div id="mlm_pay_form_wrap" class="mt-3' + payClass + '">',
+                    '        <form action="/shop/wallet/pay" method="POST">',
+                    '          <input type="hidden" name="csrf_token" value="' + csrf + '">',
+                    '          <button type="submit" class="btn btn-success btn-lg w-100 fw-bold">',
+                    '            <i class="fa fa-check-circle me-2"></i>Complete Order — Pay Entirely with Wallet',
+                    '          </button>',
+                    '        </form>',
+                    '        <p class="text-center text-muted small mt-1 mb-0">No card required. Order confirmed instantly.</p>',
+                    '      </div>',
+                    '    </div>',
+                    '  </div>',
+                    '</div>'
+                ].join('\n');
+            }
 
-                                <!-- Full-wallet pay form — shown by JS when wallet covers total -->
-                                <form id="mlm_wallet_pay_form"
-                                      action="/shop/wallet/pay"
-                                      method="POST"
-                                      class="mt-2 d-none">
-                                    <input type="hidden" name="csrf_token"
-                                           t-att-value="request.csrf_token()"/>
-                                    <button type="submit"
-                                            class="btn btn-success w-100 fw-bold">
-                                        <i class="fa fa-money me-2" title="Commission"/>
-                                        Pay Entirely with Wallet — No Card Needed
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </t>
-            </t>
-        </xpath>
-    </template>
+            function findTarget() {
+                var selectors = [
+                    { sel: '#cart_summary',               mode: 'prepend' },
+                    { sel: '.o_cart_summary',             mode: 'prepend' },
+                    { sel: 'a[href*="/shop/checkout"]',   mode: 'before'  },
+                    { sel: 'a[href*="checkout"]',         mode: 'before'  },
+                    { sel: '.js_cart_summary',            mode: 'before'  },
+                    { sel: '#wrap .container',            mode: 'prepend' },
+                    { sel: '#wrap',                       mode: 'prepend' },
+                ];
+                for (var i = 0; i < selectors.length; i++) {
+                    var el = document.querySelector(selectors[i].sel);
+                    if (el) return { el: el, mode: selectors[i].mode };
+                }
+                return null;
+            }
+
+            function inject(data) {
+                if (!data || !data.authenticated || data.balance <= 0) return;
+                if (document.getElementById('mlm_wallet_card')) return;
+
+                var wrapper = document.createElement('div');
+                wrapper.innerHTML = buildCard(data);
+                var card = wrapper.firstElementChild;
+
+                var target = findTarget();
+                if (target) {
+                    if (target.mode === 'before') {
+                        target.el.parentNode.insertBefore(card, target.el);
+                    } else {
+                        target.el.insertBefore(card, target.el.firstChild);
+                    }
+                } else {
+                    /* Absolute fallback: floating bottom bar */
+                    card.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:9999;margin:0;border-radius:0;box-shadow:0 -2px 8px rgba(0,0,0,.2)';
+                    document.body.appendChild(card);
+                }
+
+                wireButtons(data.csrf_token);
+            }
+
+            function wireButtons(csrf) {
+                var applyBtn  = document.getElementById('mlm_apply_btn');
+                var removeBtn = document.getElementById('mlm_remove_btn');
+                var feedback  = document.getElementById('mlm_feedback');
+                var notice    = document.getElementById('mlm_applied_notice');
+                var appliedEl = document.getElementById('mlm_applied_val');
+                var payWrap   = document.getElementById('mlm_pay_form_wrap');
+
+                function setFb(msg, cls) {
+                    if (feedback) { feedback.textContent = msg; feedback.className = 'small ms-2 ' + (cls || 'text-muted'); }
+                }
+
+                if (applyBtn) {
+                    applyBtn.addEventListener('click', function () {
+                        applyBtn.disabled = true;
+                        setFb('Applying…');
+                        rpc('/shop/wallet/apply', {}, function(err, res) {
+                            applyBtn.disabled = false;
+                            if (err || !res || res.error) {
+                                setFb((res && res.error) || 'Failed — please try again.', 'text-danger');
+                                return;
+                            }
+                            applyBtn.classList.add('d-none');
+                            if (removeBtn) removeBtn.classList.remove('d-none');
+                            if (notice)    notice.classList.remove('d-none');
+                            if (appliedEl) appliedEl.textContent = res.wallet_used.toFixed(2);
+                            if (res.fully_covered) {
+                                if (payWrap) payWrap.classList.remove('d-none');
+                                setFb('Fully covered! Use the green button below.', 'text-success fw-bold');
+                            } else {
+                                setFb(res.wallet_used.toFixed(2) + ' applied. Remaining to pay by card: ' + res.remaining.toFixed(2), 'text-success');
+                            }
+                        });
+                    });
+                }
+
+                if (removeBtn) {
+                    removeBtn.addEventListener('click', function () {
+                        removeBtn.disabled = true;
+                        setFb('Removing…');
+                        rpc('/shop/wallet/remove', {}, function(err) {
+                            removeBtn.disabled = false;
+                            if (err) { setFb('Failed — please try again.', 'text-danger'); return; }
+                            removeBtn.classList.add('d-none');
+                            if (applyBtn) applyBtn.classList.remove('d-none');
+                            if (notice)   notice.classList.add('d-none');
+                            if (payWrap)  payWrap.classList.add('d-none');
+                            setFb('Wallet credit removed.');
+                        });
+                    });
+                }
+            }
+
+            document.addEventListener('DOMContentLoaded', function () {
+                var path = window.location.pathname;
+                if (path.indexOf('/shop/cart') === -1 && path.indexOf('/shop/checkout') === -1) return;
+                rpc('/shop/wallet/status', {}, function(err, data) {
+                    if (!err && data) inject(data);
+                });
+            });
+        })();
+        //]]>
+        </script>
+    </xpath>
+</template>
+
+<!-- Same script on checkout page -->
+<template id="checkout_wallet_widget"
+          name="Checkout: MLM Wallet Widget"
+          inherit_id="website_sale.checkout">
+    <xpath expr="." position="inside">
+        <script type="text/javascript">
+        //<![CDATA[
+        /* The cart widget script is already on this page via website_sale.cart.
+           If navigating directly to checkout, re-trigger the wallet init. */
+        document.addEventListener('DOMContentLoaded', function () {
+            if (!document.getElementById('mlm_wallet_card')) {
+                (function tryInit(attempt) {
+                    fetch('/shop/wallet/status', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ jsonrpc: '2.0', method: 'call', id: 1, params: {} })
+                    }).then(function(r){ return r.json(); })
+                      .then(function(d){
+                          window.dispatchEvent(new CustomEvent('mlm_wallet_data', { detail: d.result }));
+                      });
+                })(0);
+            }
+        });
+        //]]>
+        </script>
+    </xpath>
+</template>
 
 </odoo>

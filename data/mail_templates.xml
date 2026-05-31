@@ -17,7 +17,7 @@
   <tr style="background:#f5f5f5"><td style="padding:6px 12px;color:#555">Order</td><td style="padding:6px 12px">{{ object.order_id.name }}</td></tr>
 </table>
 <p style="margin-top:16px">
-  <a href="/affiliate/dashboard" style="background:#0d6efd;color:#fff;padding:8px 20px;border-radius:4px;text-decoration:none">View Dashboard</a>
+  <a href="/my/affiliate" style="background:#0d6efd;color:#fff;padding:8px 20px;border-radius:4px;text-decoration:none">View Dashboard</a>
 </p>
         ]]></field>
         <field name="auto_delete" eval="True"/>
@@ -39,7 +39,7 @@
   {% if object.coupon_code %}<tr style="background:#f5f5f5"><td style="padding:6px 12px;color:#555">Coupon Code</td><td style="padding:6px 12px"><strong>{{ object.coupon_code }}</strong></td></tr>{% endif %}
 </table>
 <p style="margin-top:16px">
-  <a href="/affiliate/dashboard" style="background:#198754;color:#fff;padding:8px 20px;border-radius:4px;text-decoration:none">View Dashboard</a>
+  <a href="/my/affiliate" style="background:#198754;color:#fff;padding:8px 20px;border-radius:4px;text-decoration:none">View Dashboard</a>
 </p>
         ]]></field>
         <field name="auto_delete" eval="True"/>
@@ -60,7 +60,7 @@
   <tr><td style="padding:6px 12px;color:#555">Current Wallet Balance</td><td style="padding:6px 12px"><strong>{{ context.get('wallet_balance',0) | round(2) }}</strong></td></tr>
 </table>
 <p style="margin-top:16px">
-  <a href="/affiliate/dashboard" style="background:#0d6efd;color:#fff;padding:8px 20px;border-radius:4px;text-decoration:none">View Full Dashboard</a>
+  <a href="/my/affiliate" style="background:#0d6efd;color:#fff;padding:8px 20px;border-radius:4px;text-decoration:none">View Full Dashboard</a>
 </p>
         ]]></field>
         <field name="auto_delete" eval="True"/>

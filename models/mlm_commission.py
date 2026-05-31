@@ -4,6 +4,7 @@ import string
 from datetime import date, timedelta
 
 from odoo import models, fields, api
+from odoo.exceptions import UserError
 
 _logger = logging.getLogger(__name__)
 
@@ -135,7 +136,6 @@ class MlmCommission(models.Model):
             if rec.state != 'approved':
                 continue
             if min_threshold > 0 and rec.amount < min_threshold:
-                from odoo.exceptions import UserError
                 raise UserError(
                     f'Commission amount {rec.amount:.2f} is below the minimum '
                     f'payout threshold of {min_threshold:.2f}. '

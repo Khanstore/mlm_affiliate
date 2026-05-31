@@ -15,35 +15,44 @@ class AccountMove(models.Model):
     _PAID_STATES = frozenset({'in_payment', 'paid'})
 
     def write(self, vals):
+        # Capture pre-write payment states for comparison after write
+        # (payment_state is computed in Odoo 18 — not always in vals)
+        pre_states = {}
+        if 'payment_state' in vals or True:
+            pre_states = {m.id: m.payment_state for m in self}
+
+        res = super().write(vals)
+
         moves_to_approve = self.env['account.move']
         moves_to_clawback = self.env['account.move']
 
-        if 'payment_state' in vals:
-            new_payment_state = vals['payment_state']
-            # Approve commissions on paid invoices
-            moves_to_approve = self.filtered(
-                lambda m: (
-                    m.move_type in ('out_invoice',)
-                    and m.payment_state not in self._PAID_STATES
-                    and new_payment_state in self._PAID_STATES
-                )
-            )
-            # Clawback commissions on paid credit notes (refunds)
-            moves_to_clawback = self.filtered(
-                lambda m: (
-                    m.move_type in ('out_refund',)
-                    and m.payment_state not in self._PAID_STATES
-                    and new_payment_state in self._PAID_STATES
-                )
-            )
-
-        res = super().write(vals)
+        for move in self:
+            old_state = pre_states.get(move.id, '')
+            new_state = move.payment_state
+            if old_state == new_state or new_state not in self._PAID_STATES:
+                continue
+            if move.move_type == 'out_invoice':
+                moves_to_approve |= move
+            elif move.move_type == 'out_refund':
+                moves_to_clawback |= move
 
         if moves_to_approve:
             moves_to_approve._approve_related_commissions()
         if moves_to_clawback:
             moves_to_clawback._clawback_related_commissions()
 
+        return res
+
+    def _invoice_paid_hook(self):
+        """Odoo 18 calls this explicitly when an invoice transitions to paid.
+        This is the reliable hook — use it as a second safety net."""
+        res = super()._invoice_paid_hook()
+        invoices = self.filtered(
+            lambda m: m.move_type == 'out_invoice'
+            and m.payment_state in self._PAID_STATES
+        )
+        if invoices:
+            invoices._approve_related_commissions()
         return res
 
     def _approve_related_commissions(self):
