@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!--
+        mlm_level_rate_views.xml  — patched
+        =====================================
+        [NEW-2] Added company_id column to list and form views.
+        [FIX-11] Rate field now shows 0 as valid (no red decoration for 0).
+        Added a summary warning when total exceeds 100%.
+    -->
 
     <record id="view_mlm_level_rate_list" model="ir.ui.view">
         <field name="name">mlm.level.rate.list</field>
@@ -7,14 +14,15 @@
         <field name="arch" type="xml">
             <list string="Level Distribution Rates"
                   editable="bottom"
-                  decoration-danger="rate == 0"
                   decoration-muted="not active">
                 <field name="level"/>
                 <field name="description" placeholder="e.g. Direct Referrer"/>
                 <field name="rate" string="Rate (%)"/>
+                <!-- [NEW-2] Company column — optional, shown collapsed by default -->
+                <field name="company_id" optional="show" groups="base.group_multi_company"/>
                 <field name="active" optional="show"/>
-                <!-- Running total shown in the footer -->
-                <field name="total_rate" string="Total %" sum="Total Rate (%)"/>
+                <!-- total_rate removed from list footer — it is a cross-record aggregate
+                     that read_group cannot sum meaningfully per-row -->
             </list>
         </field>
     </record>
@@ -26,20 +34,31 @@
             <form string="Level Distribution Rate">
                 <sheet>
                     <div class="alert alert-info" role="alert">
-                        <i class="fa fa-info-circle me-1"/>
+                        <i class="fa fa-info-circle me-1" title="Info"/>
                         Rates do <strong>not</strong> need to sum to 100%.
-                        Any unallocated portion simply stays with the company.
+                        Any unallocated portion stays with the company.
                         Example: L1 = 60%, L2 = 20%, L3 = 10% → 10% unallocated.
+                    </div>
+                    <!-- Warning shown when total exceeds 100% -->
+                    <div class="alert alert-warning" role="alert"
+                         invisible="total_rate &lt;= 100">
+                        <i class="fa fa-exclamation-triangle me-1" title="Warning"/>
+                        <strong>Warning:</strong> The sum of all active rates exceeds 100%.
+                        This means commissions paid out will exceed the product's commission pot.
+                        Please review your level rates.
                     </div>
                     <group>
                         <group>
                             <field name="level"/>
                             <field name="description"/>
+                            <!-- [NEW-2] Company field — only visible in multi-company installs -->
+                            <field name="company_id" groups="base.group_multi_company"/>
                             <field name="active"/>
                         </group>
                         <group>
                             <field name="rate" string="Rate (%)"/>
-                            <field name="total_rate" string="Total of All Active Rates (%)"
+                            <field name="total_rate"
+                                   string="Total of All Active Rates (%)"
                                    readonly="1"/>
                         </group>
                     </group>
@@ -55,11 +74,13 @@
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">No level rates defined yet!</p>
             <p>
-                Add one row per MLM level. Each rate is the percentage of the
+                Add one row per MLM level.  Each rate is the percentage of the
                 product's total commission pot that goes to that upline level.<br/>
                 Rates do <strong>not</strong> need to sum to 100% —
                 any unallocated remainder stays with the company.<br/>
-                <strong>Example:</strong> L1 = 60%, L2 = 20%, L3 = 10%
+                <strong>Example:</strong> L1 = 60%, L2 = 20%, L3 = 10%<br/>
+                In a multi-company setup, add company-specific rows to override
+                the global (company = empty) defaults for individual companies.
             </p>
         </field>
     </record>

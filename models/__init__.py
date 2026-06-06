@@ -11,3 +11,4 @@ from . import account_move
 from . import mlm_payout_request
 from . import mlm_campaign
 from . import mlm_milestone
+from . import mlm_fraud_detection

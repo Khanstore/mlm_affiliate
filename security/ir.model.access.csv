@@ -18,3 +18,5 @@ access_mlm_milestone_manager,mlm.milestone manager,model_mlm_milestone,mlm_affil
 access_mlm_milestone_user,mlm.milestone user,model_mlm_milestone,base.group_user,1,0,0,0
 access_mlm_partner_milestone_manager,mlm.partner.milestone manager,model_mlm_partner_milestone,mlm_affiliate.group_mlm_manager,1,1,1,1
 access_mlm_partner_milestone_user,mlm.partner.milestone user,model_mlm_partner_milestone,base.group_user,1,0,0,0
+access_mlm_fraud_checker_manager,mlm.fraud.checker manager,model_mlm_fraud_checker,mlm_affiliate.group_mlm_manager,1,1,1,1
+access_mlm_fraud_checker_user,mlm.fraud.checker user,model_mlm_fraud_checker,base.group_user,1,0,0,0

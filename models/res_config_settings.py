@@ -1,3 +1,11 @@
+"""
+res_config_settings.py  — patched
+===================================
+
+[NEW-2] Added mlm_fraud_threshold field for configuring the fraud
+        detection sensitivity from the Settings UI.
+"""
+
 from odoo import models, fields
 
 
@@ -28,7 +36,20 @@ class ResConfigSettings(models.TransientModel):
              'approved (covers return/refund window). Set to 0 to disable.',
         config_parameter='mlm_affiliate.commission_hold_days',
     )
+
+    # ── Fraud detection ────────────────────────────────────────────────────────
+
+    mlm_fraud_threshold = fields.Integer(
+        string='Fraud Signal Threshold',
+        default=3,
+        help='How many referred accounts must share the same IP address, device '
+             'fingerprint, or shipping address before the fraud flag is raised.  '
+             'Set to 0 to disable automated flagging.',
+        config_parameter='mlm_affiliate.fraud_threshold',
+    )
+
     # ── Accounting ─────────────────────────────────────────────────────────────
+
     mlm_expense_account_id = fields.Many2one(
         comodel_name='account.account',
         string='MLM Commission Expense Account',
@@ -49,7 +70,9 @@ class ResConfigSettings(models.TransientModel):
              'general journal if not set.',
         config_parameter='mlm_affiliate.journal_id',
     )
+
     # ── Affiliate application ──────────────────────────────────────────────────
+
     mlm_require_application = fields.Boolean(
         string='Require Affiliate Application Approval',
         default=False,

@@ -1,6 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
+    <!--
+        res_partner_views.xml  — patched
+        =================================
+
+        CHANGES
+        Changes:
+        [NEW-1] Smart button: "Referral Network"
+            Shows the total count of ALL downline partners across all levels.
+            Clicking opens a Kanban view filtered to the partner's full sub-tree
+            via action_view_downline_network().
+
+            The existing "Downline" button only showed direct referees and
+            incorrectly redirected to the Commissions list.  That button is
+            replaced with the new deep-network button.
+
+        [NEW-3] Fraud flag indicator
+            A red warning badge appears in the button_box when mlm_fraud_flag
+            is True.  Visible only to MLM managers (groups attribute).
+            The fraud reason is shown in a collapsible admin section.
+    -->
+
     <record id="view_partner_form_affiliate" model="ir.ui.view">
         <field name="name">res.partner.form.affiliate</field>
         <field name="model">res.partner</field>
@@ -8,34 +29,77 @@
         <field name="arch" type="xml">
 
             <xpath expr="//div[@name='button_box']" position="inside">
+
+                <!-- Commissions earned button (unchanged) -->
                 <button name="action_view_mlm_commissions" type="object"
                         class="oe_stat_button" icon="fa-money"
                         invisible="not commission_ids">
                     <div class="o_stat_info">
-                        <span class="o_stat_value"><field name="total_commission_earned"/></span>
+                        <span class="o_stat_value">
+                            <field name="total_commission_earned"/>
+                        </span>
                         <span class="o_stat_text">Earned</span>
                     </div>
                 </button>
-                <button name="action_view_mlm_commissions" type="object"
+
+                <!--
+                    [NEW-1] Referral Network smart button — replaces the old
+                    "Downline" button that only counted direct children and
+                    opened the wrong view.
+                    Shows total_downline_count (all levels) and opens Kanban.
+                -->
+                <button name="action_view_downline_network" type="object"
+                        class="oe_stat_button" icon="fa-sitemap"
+                        invisible="total_downline_count == 0">
+                    <div class="o_stat_info">
+                        <span class="o_stat_value">
+                            <field name="total_downline_count"/>
+                        </span>
+                        <span class="o_stat_text">Network</span>
+                    </div>
+                </button>
+
+                <!-- Direct referral count (kept for quick reference) -->
+                <button name="action_view_downline_network" type="object"
                         class="oe_stat_button" icon="fa-users"
                         invisible="downline_count == 0">
                     <div class="o_stat_info">
-                        <span class="o_stat_value"><field name="downline_count"/></span>
-                        <span class="o_stat_text">Downline</span>
+                        <span class="o_stat_value">
+                            <field name="downline_count"/>
+                        </span>
+                        <span class="o_stat_text">Direct</span>
                     </div>
                 </button>
+
+                <!-- Link click tracker -->
                 <button type="object" name="action_view_mlm_commissions"
                         class="oe_stat_button" icon="fa-mouse-pointer"
                         invisible="referral_click_count == 0">
                     <div class="o_stat_info">
-                        <span class="o_stat_value"><field name="referral_click_count"/></span>
+                        <span class="o_stat_value">
+                            <field name="referral_click_count"/>
+                        </span>
                         <span class="o_stat_text">Link Clicks</span>
                     </div>
                 </button>
+
+                <!-- [NEW-3] Fraud flag indicator — only visible to MLM managers -->
+                <button type="object" name="action_view_mlm_commissions"
+                        class="oe_stat_button btn-danger"
+                        icon="fa-exclamation-triangle"
+                        invisible="not mlm_fraud_flag"
+                        groups="mlm_affiliate.group_mlm_manager">
+                    <div class="o_stat_info">
+                        <span class="o_stat_text text-white">Fraud<br/>Suspected</span>
+                    </div>
+                </button>
+
             </xpath>
 
+            <!-- Affiliate tab — preserve existing content, add fraud section -->
             <xpath expr="//notebook" position="inside">
                 <page string="Affiliate / MLM" name="mlm_affiliate">
+
                     <!-- Application status bar -->
                     <div class="d-flex align-items-center gap-2 mb-3"
                          invisible="not is_affiliate">
@@ -74,29 +138,48 @@
                                    placeholder="IBAN / account number / mobile wallet"/>
                         </group>
                     </group>
+
                     <group string="Referral Link Analytics">
                         <group>
                             <field name="referral_click_count" string="Total Link Clicks"/>
                             <field name="referral_last_click" string="Last Click"/>
                         </group>
+                        <group>
+                            <field name="downline_count" string="Direct Referrals"/>
+                            <field name="total_downline_count" string="Total Network Size"/>
+                        </group>
                     </group>
-                    <separator string="Direct Downline (Level 1 Referrals)"/>
-                    <field name="downline_ids" readonly="1">
-                        <list>
-                            <field name="name"/>
-                            <field name="email"/>
-                            <field name="referral_code"/>
-                            <field name="is_affiliate"/>
-                            <field name="tier_id"/>
-                            <field name="affiliate_status"/>
-                        </list>
-                    </field>
+
+                    <!-- [NEW-3] Fraud section — admin only -->
+                    <group string="⚠ Fraud Detection"
+                           invisible="not mlm_fraud_flag"
+                           groups="mlm_affiliate.group_mlm_manager">
+                        <div class="alert alert-danger" role="alert">
+                            <strong>This partner has been flagged by the automated fraud detector.</strong>
+                            <br/>
+                            <field name="mlm_fraud_reason" widget="text" readonly="1"/>
+                        </div>
+                        <group>
+                            <field name="mlm_registration_ip" string="Registration IP" readonly="1"/>
+                            <field name="mlm_device_fingerprint" string="Device Fingerprint" readonly="1"/>
+                        </group>
+                        <div>
+                            <button name="action_clear_fraud_flag"
+                                    type="object"
+                                    string="Clear Fraud Flag"
+                                    class="btn btn-warning btn-sm"
+                                    confirm="Are you sure you want to clear this fraud flag?"/>
+                        </div>
+                    </group>
+
                 </page>
             </xpath>
 
         </field>
     </record>
 
+
+    <!-- Affiliate list view — referenced by action_affiliate_partners -->
     <record id="view_affiliate_partner_list" model="ir.ui.view">
         <field name="name">res.partner.affiliate.list</field>
         <field name="model">res.partner</field>
@@ -138,7 +221,6 @@
         </field>
     </record>
 
-    <!-- Pending affiliates quick action -->
     <record id="action_affiliate_partners_pending" model="ir.actions.act_window">
         <field name="name">Pending Affiliate Applications</field>
         <field name="res_model">res.partner</field>

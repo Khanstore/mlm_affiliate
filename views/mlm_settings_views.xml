@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <record id="view_res_config_settings_mlm" model="ir.ui.view">
+    <record id="res_config_settings_view_form_mlm" model="ir.ui.view">
         <field name="name">res.config.settings.mlm.affiliate</field>
         <field name="model">res.config.settings</field>
         <field name="inherit_id" ref="base_setup.res_config_settings_view_form"/>
         <field name="arch" type="xml">
             <xpath expr="//form" position="inside">
                 <app string="MLM Affiliate" name="mlm_affiliate">
+
                     <block title="Commission Settings">
                         <setting string="Admin Account (Unallocated Commissions)"
                                  help="Receives commission for any MLM level with no upline partner.">
@@ -24,7 +25,29 @@
                                  help="New affiliates start as Pending and must be approved before earning commissions.">
                             <field name="mlm_require_application"/>
                         </setting>
+                        <setting string="Send Monthly Summary Emails"
+                                 help="Automatically email every active affiliate a monthly earnings summary.">
+                            <field name="mlm_send_monthly_summary"/>
+                        </setting>
                     </block>
+
+                    <block title="Fraud Detection">
+                        <setting string="Fraud Signal Threshold"
+                                 help="How many referred accounts must share the same IP, device fingerprint, or shipping address before a fraud flag is raised. Default: 3. Set to 0 to disable.">
+                            <field name="mlm_fraud_threshold"/>
+                        </setting>
+                    </block>
+
+                    <block title="Commission Level Rates">
+                        <setting string="Level Rate Configuration"
+                                 help="Define what percentage of each product commission pot goes to each upline level.">
+                            <button type="action"
+                                    name="%(mlm_affiliate.action_mlm_level_rate)d"
+                                    string="Open Level Rate Configuration"
+                                    class="btn btn-secondary"/>
+                        </setting>
+                    </block>
+
                     <block title="Accounting">
                         <setting string="Commission Expense Account"
                                  help="Debit account for MLM commission journal entries (e.g. Marketing Expenses).">
@@ -41,12 +64,7 @@
                             <field name="mlm_journal_id"/>
                         </setting>
                     </block>
-                    <block title="Email Notifications">
-                        <setting string="Send Monthly Summary Emails"
-                                 help="Automatically email every active affiliate a monthly earnings summary.">
-                            <field name="mlm_send_monthly_summary"/>
-                        </setting>
-                    </block>
+
                 </app>
             </xpath>
         </field>

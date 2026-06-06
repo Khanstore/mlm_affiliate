@@ -1,6 +1,6 @@
 {
     'name': 'MLM Affiliate',
-    'version': '18.0.2.18.0',
+    'version': '18.0.2.19.0',
     'category': 'Sales/Affiliate',
     'summary': 'Multi-level affiliate commissions with wallet, accounting, campaigns, milestones and fraud protection.',
     'description': """
@@ -24,6 +24,9 @@ Features:
 - Downline tree view
 - Referral link click tracking + QR code
 - Monthly summary emails (toggleable)
+- SECURITY AUDIT v2.19: Circular referral prevention, concurrency advisory lock,
+  fraud detection (IP/address/fingerprint), N+1 query fixes, multi-company
+  level rate overrides, smart downline network button.
     """,
     'website': 'https://www.khan-store.com/mlm',
     'author': 'Custom',
@@ -47,6 +50,7 @@ Features:
         'data/mlm_level_rate_data.xml',
         'data/mlm_accounting_data.xml',
         'data/cron_data.xml',
+        'data/fraud_cron.xml',
         'data/mail_templates.xml',
         # Backend views
         'views/mlm_commission_views.xml',
