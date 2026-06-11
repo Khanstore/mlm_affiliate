@@ -1,6 +1,6 @@
 import logging
 
-from odoo import http
+from odoo import http, _
 from odoo.http import request
 from odoo.addons.portal.controllers.portal import CustomerPortal
 from odoo.addons.auth_signup.controllers.main import AuthSignupHome
@@ -491,3 +491,115 @@ class AffiliateSignupController(AuthSignupHome):
             request.future_response.set_cookie('mlm_ref', '', max_age=0, expires=0)
         except Exception:
             pass
+
+
+# ── Affiliate Sign-Up Page ────────────────────────────────────────────────────
+
+class AffiliateSignup(http.Controller):
+
+    @http.route('/affiliate/join', type='http', auth='public', website=True, sitemap=True)
+    def affiliate_join(self, **kwargs):
+        """Render the affiliate sign-up / application page."""
+        partner = None
+        if not request.env.user._is_public():
+            partner = request.env.user.partner_id.sudo()
+        return request.render('mlm_affiliate.affiliate_join_page', {
+            'partner': partner,
+        })
+
+    @http.route('/affiliate/lookup', type='json', auth='public', website=True)
+    def affiliate_lookup(self, search='', **kwargs):
+        """Search for an existing partner by phone, mobile, or email.
+        Returns minimal info so the form can pre-fill name fields."""
+        search = (search or '').strip()
+        if not search or len(search) < 4:
+            return {'found': False}
+        Partner = request.env['res.partner'].sudo()
+        partner = Partner.search([
+            '|', '|',
+            ('email', '=ilike', search),
+            ('phone', '=', search),
+            ('mobile', '=', search),
+        ], limit=1)
+        if not partner:
+            return {'found': False}
+        return {
+            'found': True,
+            'id': partner.id,
+            'name': partner.name,
+            'email': partner.email or '',
+            'phone': partner.phone or '',
+            'mobile': partner.mobile or '',
+            'is_affiliate': partner.is_affiliate,
+            'affiliate_status': partner.affiliate_status or '',
+        }
+
+    @http.route('/affiliate/apply', type='json', auth='public', website=True)
+    def affiliate_apply(self, name='', email='', phone='', mobile='',
+                        partner_id=None, **kwargs):
+        """Create or find a partner and set them as a pending affiliate."""
+        name   = (name or '').strip()
+        email  = (email or '').strip()
+        phone  = (phone or '').strip()
+        mobile = (mobile or '').strip()
+
+        if not name:
+            return {'success': False, 'error': _('Full name is required.')}
+        if not (email or phone or mobile):
+            return {'success': False, 'error': _('Please provide at least one contact detail.')}
+
+        Partner = request.env['res.partner'].sudo()
+
+        # If frontend passed a confirmed partner id, use it
+        partner = None
+        if partner_id:
+            partner = Partner.browse(int(partner_id)).exists()
+
+        # Otherwise search again to be safe
+        if not partner and (email or phone or mobile):
+            domain = []
+            if email:
+                domain.append(('email', '=ilike', email))
+            if phone:
+                domain.append(('phone', '=', phone))
+            if mobile:
+                domain.append(('mobile', '=', mobile))
+            if len(domain) > 1:
+                domain = ['|'] * (len(domain) - 1) + domain
+            partner = Partner.search(domain, limit=1)
+
+        if partner:
+            # Existing partner — upgrade to affiliate if not already
+            if partner.is_affiliate and partner.affiliate_status == 'approved':
+                return {'success': False,
+                        'error': _('This contact is already an approved affiliate.')}
+            vals = {'is_affiliate': True, 'affiliate_status': 'pending'}
+            # Fill in any missing contact details
+            if email and not partner.email:
+                vals['email'] = email
+            if phone and not partner.phone:
+                vals['phone'] = phone
+            if mobile and not partner.mobile:
+                vals['mobile'] = mobile
+            partner.write(vals)
+        else:
+            # New partner
+            partner = Partner.create({
+                'name': name,
+                'email': email,
+                'phone': phone,
+                'mobile': mobile,
+                'is_affiliate': True,
+                'affiliate_status': 'pending',
+                'customer_rank': 1,
+            })
+
+        # Generate referral code if missing
+        if not partner.referral_code:
+            partner.referral_code = partner._generate_referral_code()
+
+        return {
+            'success': True,
+            'message': _('Your application has been submitted. '
+                         'We will review it and get back to you shortly.'),
+        }

@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <template id="affiliate_join_page" name="Affiliate Join Page">
+        <t t-call="website.layout">
+            <t t-set="head">
+                <title>Become an Affiliate Partner — <t t-esc="request.website.name"/></title>
+            </t>
+
+            <div class="o_affiliate_join_page">
+
+                <!-- ── Hero Banner ───────────────────────────────────────── -->
+                <section class="o_affiliate_hero py-5"
+                         style="background: linear-gradient(135deg,#1a3c5e 0%,#2e7d32 100%);">
+                    <div class="container text-center text-white">
+                        <h1 class="display-5 fw-bold mb-3">Become a Referral Partner</h1>
+                        <p class="lead mb-0 opacity-75">
+                            Share products you love. Earn commissions on every sale.
+                        </p>
+                    </div>
+                </section>
+
+                <!-- ── Benefits Strip ────────────────────────────────────── -->
+                <section class="bg-light py-4 border-bottom">
+                    <div class="container">
+                        <div class="row text-center g-3">
+                            <div class="col-6 col-md-3">
+                                <div class="fs-2">💰</div>
+                                <div class="small fw-semibold">Earn Commissions</div>
+                                <div class="text-muted" style="font-size:12px;">On every referred sale</div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="fs-2">🔗</div>
+                                <div class="small fw-semibold">Your Own Link</div>
+                                <div class="text-muted" style="font-size:12px;">Share on WhatsApp, Facebook &amp; more</div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="fs-2">📊</div>
+                                <div class="small fw-semibold">Live Dashboard</div>
+                                <div class="text-muted" style="font-size:12px;">Track earnings in real time</div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="fs-2">🆓</div>
+                                <div class="small fw-semibold">Free to Join</div>
+                                <div class="text-muted" style="font-size:12px;">No fees, no commitments</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ── Main Form ──────────────────────────────────────────── -->
+                <section class="py-5">
+                    <div class="container">
+                        <div class="row justify-content-center">
+                            <div class="col-12 col-md-7 col-lg-5">
+
+                                <div class="card shadow-sm border-0">
+                                    <div class="card-body p-4 p-md-5">
+
+                                        <h4 class="fw-bold mb-1 text-center">Apply Now</h4>
+                                        <p class="text-muted text-center small mb-4">
+                                            Already a customer? We'll find your account.
+                                        </p>
+
+                                        <!-- Already approved affiliate (logged in) -->
+                                        <t t-if="partner and partner.is_affiliate and partner.affiliate_status == 'approved'">
+                                            <div class="alert alert-success text-center">
+                                                <div class="fs-3 mb-1">🎉</div>
+                                                <strong>You are already an approved affiliate!</strong><br/>
+                                                <a href="/my/affiliate" class="btn btn-success btn-sm mt-2">
+                                                    Go to My Dashboard
+                                                </a>
+                                            </div>
+                                        </t>
+
+                                        <!-- Pending (logged in) -->
+                                        <t t-elif="partner and partner.is_affiliate and partner.affiliate_status == 'pending'">
+                                            <div class="alert alert-warning text-center">
+                                                <div class="fs-3 mb-1">⏳</div>
+                                                <strong>Your application is under review.</strong><br/>
+                                                We'll notify you once it's approved.
+                                            </div>
+                                        </t>
+
+                                        <!-- Form -->
+                                        <t t-else="">
+
+                                            <!-- Step 1: Lookup -->
+                                            <div id="o_aff_step_lookup">
+                                                <label class="form-label fw-semibold">
+                                                    Search by Phone, Mobile or Email
+                                                </label>
+                                                <div class="input-group mb-2">
+                                                    <input id="o_aff_search"
+                                                           type="text"
+                                                           class="form-control"
+                                                           placeholder="e.g. 01711234567 or you@email.com"
+                                                           autocomplete="off"/>
+                                                    <button id="o_aff_search_btn"
+                                                            class="btn btn-outline-secondary"
+                                                            type="button">
+                                                        Search
+                                                    </button>
+                                                </div>
+                                                <div id="o_aff_search_result" class="mb-3"></div>
+                                                <div class="text-center text-muted small mb-3">
+                                                    — or fill in your details below —
+                                                </div>
+                                            </div>
+
+                                            <!-- Step 2: Details form -->
+                                            <div id="o_aff_form">
+                                                <input id="o_aff_partner_id" type="hidden" value=""/>
+
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-semibold">
+                                                        Full Name <span class="text-danger">*</span>
+                                                    </label>
+                                                    <input id="o_aff_name"
+                                                           type="text"
+                                                           class="form-control"
+                                                           placeholder="Your full name"/>
+                                                </div>
+
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-semibold">Email</label>
+                                                    <input id="o_aff_email"
+                                                           type="email"
+                                                           class="form-control"
+                                                           placeholder="your@email.com"/>
+                                                </div>
+
+                                                <div class="row g-2 mb-3">
+                                                    <div class="col-6">
+                                                        <label class="form-label fw-semibold">Phone</label>
+                                                        <input id="o_aff_phone"
+                                                               type="tel"
+                                                               class="form-control"
+                                                               placeholder="Land line"/>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <label class="form-label fw-semibold">Mobile</label>
+                                                        <input id="o_aff_mobile"
+                                                               type="tel"
+                                                               class="form-control"
+                                                               placeholder="Mobile number"/>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Feedback area -->
+                                                <div id="o_aff_alert" class="d-none mb-3"></div>
+
+                                                <button id="o_aff_submit"
+                                                        class="btn btn-success w-100 py-2 fw-semibold">
+                                                    Submit Application
+                                                </button>
+
+                                                <p class="text-muted text-center mt-3 mb-0"
+                                                   style="font-size:12px;">
+                                                    Applications are reviewed within 24 hours.
+                                                    You will be notified by email or phone.
+                                                </p>
+                                            </div>
+
+                                            <!-- Success state (shown after submit) -->
+                                            <div id="o_aff_success" class="d-none text-center py-3">
+                                                <div class="fs-1 mb-2">✅</div>
+                                                <h5 class="fw-bold">Application Submitted!</h5>
+                                                <p class="text-muted" id="o_aff_success_msg"></p>
+                                                <a href="/shop" class="btn btn-outline-success btn-sm mt-1">
+                                                    Continue Shopping
+                                                </a>
+                                            </div>
+
+                                        </t>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </div><!-- /.o_affiliate_join_page -->
+        </t>
+    </template>
+
+</odoo>

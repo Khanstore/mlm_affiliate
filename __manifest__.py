@@ -1,6 +1,6 @@
 {
     'name': 'MLM Affiliate',
-    'version': '18.0.2.30.0',
+    'version': '18.0.2.32.0',
     'category': 'Sales/Affiliate',
     'summary': 'Multi-level affiliate commissions with wallet, accounting, campaigns, milestones and fraud protection.',
     'description': """
@@ -69,12 +69,14 @@ Features:
         'views/portal_affiliate_views.xml',
         'views/og_redirect_template.xml',
         'views/website_templates.xml',
+        'views/affiliate_join_template.xml',
         # Menus (must be last — references all actions)
         'views/menus.xml',
     ],
     'assets': {
         'web.assets_frontend': [
             'mlm_affiliate/static/src/js/affiliate_share.js',
+            'mlm_affiliate/static/src/js/affiliate_join.js',
         ],
     },
     'pre_init_hook': 'pre_init_hook',
