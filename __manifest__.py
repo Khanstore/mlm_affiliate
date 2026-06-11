@@ -1,6 +1,6 @@
 {
     'name': 'MLM Affiliate',
-    'version': '18.0.2.19.0',
+    'version': '18.0.2.30.0',
     'category': 'Sales/Affiliate',
     'summary': 'Multi-level affiliate commissions with wallet, accounting, campaigns, milestones and fraud protection.',
     'description': """
@@ -14,8 +14,7 @@ Features:
 - Self-referral prevention and affiliate application approval flow
 - Affiliate wallet: balance usable to pay online orders at checkout
 - Payout request workflow (portal submission + admin approve/pay)
-- Accounting integration: approved commissions create expense journal entries
-  (Debit: MLM Commission Expense / Credit: MLM Commissions Payable)
+- Accounting integration: approved commissions create expense journal entries (Debit: MLM Commission Expense / Credit: MLM Commissions Payable)
 - Campaign/promo codes with boosted commission multipliers per affiliate
 - Milestone bonuses: automatic one-time rewards on earnings/referral thresholds
 - Affiliate tiers auto-assigned by earnings + referral count
@@ -73,6 +72,11 @@ Features:
         # Menus (must be last — references all actions)
         'views/menus.xml',
     ],
+    'assets': {
+        'web.assets_frontend': [
+            'mlm_affiliate/static/src/js/affiliate_share.js',
+        ],
+    },
     'pre_init_hook': 'pre_init_hook',
     'post_init_hook': 'post_init_hook',
     'installable': True,

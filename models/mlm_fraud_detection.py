@@ -227,7 +227,7 @@ class MlmFraudChecker(models.AbstractModel):
         # --- Address scan ---
         # street + city + zip grouping
         self.env.cr.execute("""
-            SELECT upline_partner_id, street, city, zip, COUNT(*) AS cnt
+            SELECT upline_partner_id, LOWER(street) AS street, LOWER(city) AS city, zip, COUNT(*) AS cnt
             FROM res_partner
             WHERE upline_partner_id IS NOT NULL
               AND COALESCE(street, '') != ''

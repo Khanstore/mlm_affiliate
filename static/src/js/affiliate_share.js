@@ -1,91 +1,109 @@
-/** @odoo-module **/
-/**
- * FIX: Removed console.debug calls.
- * Rewrites social-share buttons on a product page with the affiliate's referral URL.
- */
+// MLM Affiliate Share — Odoo 18
+// No @odoo-module tag: runs as a plain synchronous script.
+//
+// Odoo 18 s_share widget confirmed source:
+//   const currentUrl = window.location.href;
+//   modifiedUrl.searchParams.set(param, currentUrl);
+//   window.open(modifiedUrl.toString(), aEl.target, "...");
+//
+// Fix: use history.replaceState to temporarily swap window.location.href
+// to the referral URL in a capture-phase click handler that fires BEFORE
+// Odoo's jQuery handler reads window.location.href. Restore immediately
+// after via setTimeout(0) once the call stack is done.
+
 (function () {
     'use strict';
 
-    function getAffiliateCode() {
-        const el = document.getElementById('mlm_affiliate_data');
-        return el ? (el.dataset.refCode || '').trim() : '';
+    // Read the ref code that the QWeb template injects server-side.
+    // Called lazily at click time so DOM readiness doesn't matter.
+    var _code;
+    function getCode() {
+        if (_code !== undefined) return _code;
+        var el = document.getElementById('mlm_affiliate_data');
+        _code = (el && el.getAttribute('data-ref-code')) || '';
+        return _code;
     }
 
-    function buildAffiliateUrl(refCode) {
-        const origin = window.location.origin;
-        const path = window.location.pathname.replace(/^\//, '');
-        return origin + '/ref/' + refCode + '/' + path;
-    }
-
-    const SHARE_PATTERNS = [
-        { host: 'facebook.com/sharer',      param: 'u'    },
-        { host: 'twitter.com/intent/tweet', param: 'url'  },
-        { host: 'x.com/intent/tweet',       param: 'url'  },
-        { host: 'linkedin.com/sharing',     param: 'url'  },
-        { host: 'pinterest.com/pin/create', param: 'url'  },
-        { host: 'wa.me',                    param: 'text' },
-        { host: 'api.whatsapp.com/send',    param: 'text' },
-        { host: 'mailto:',                  param: 'body' },
-    ];
-
-    function patchAnchor(anchor, affiliateUrl) {
-        const rawHref = anchor.getAttribute('href') || '';
-        if (!rawHref) return;
-        for (const pattern of SHARE_PATTERNS) {
-            if (!rawHref.includes(pattern.host)) continue;
-            try {
-                if (pattern.host === 'mailto:') {
-                    const patched = rawHref.replace(/body=([^&]*)/, function (_, encoded) {
-                        const rewritten = decodeURIComponent(encoded)
-                            .replace(/https?:\/\/[^\s"<]+/g, affiliateUrl);
-                        return 'body=' + encodeURIComponent(rewritten);
-                    });
-                    anchor.setAttribute('href', patched);
-                    return;
-                }
-                const url = new URL(rawHref);
-                const val = url.searchParams.get(pattern.param);
-                if (val) {
-                    url.searchParams.set(pattern.param, affiliateUrl);
-                    anchor.setAttribute('href', url.toString());
-                }
-            } catch (e) { /* malformed href */ }
-            return;
+    // Build referral URL: /ref/CODE/shop/... from the current page URL.
+    function toRefUrl(href, code) {
+        try {
+            var u = new URL(href);
+            if (u.pathname.indexOf('/ref/') === 0) return href; // already tagged
+            u.pathname = '/ref/' + code + u.pathname;
+            return u.toString();
+        } catch (e) {
+            return href;
         }
     }
 
-    function patchAll(affiliateUrl) {
-        document.querySelectorAll('a[href]').forEach(function (a) {
-            patchAnchor(a, affiliateUrl);
-        });
-    }
+    // ── Step 1: Capture-phase click handler ───────────────────────────────────
+    // Fires before Odoo's jQuery bubble-phase handler on .s_share a clicks.
+    // Temporarily replaces window.location.href via history.replaceState so
+    // Odoo reads our referral URL instead of the bare product URL.
+    document.addEventListener('click', function (ev) {
+        var code = getCode();
+        if (!code) return;
 
-    function watchDOM(affiliateUrl) {
-        const observer = new MutationObserver(function (mutations) {
-            mutations.forEach(function (mutation) {
-                mutation.addedNodes.forEach(function (node) {
-                    if (node.nodeType !== 1) return;
-                    const anchors = node.tagName === 'A'
-                        ? [node]
-                        : Array.from(node.querySelectorAll('a[href]'));
-                    anchors.forEach(function (a) { patchAnchor(a, affiliateUrl); });
+        // Walk up the DOM to check we are inside .s_share or .oe_share
+        var node = ev.target;
+        var inside = false;
+        for (var i = 0; i < 12; i++) {
+            if (!node || node === document) break;
+            var cls = node.className || '';
+            if (typeof cls === 'string' && (cls.indexOf('s_share') !== -1 || cls.indexOf('oe_share') !== -1)) {
+                inside = true;
+                break;
+            }
+            node = node.parentNode;
+        }
+        if (!inside) return;
+
+        var orig = window.location.href;
+        var ref  = toRefUrl(orig, code);
+        if (ref === orig) return;
+
+        // Temporarily swap the URL
+        try {
+            history.replaceState(history.state, '', ref);
+        } catch (e) {
+            return; // history API blocked — fall through to window.open wrap
+        }
+
+        // Restore after the current call stack completes
+        // (Odoo calls window.open synchronously inside its click handler,
+        //  so setTimeout(0) runs after window.open has already been called)
+        setTimeout(function () {
+            try { history.replaceState(history.state, '', orig); } catch (e2) {}
+        }, 0);
+
+    }, true); // true = capture phase
+
+    // ── Step 2: window.open wrapper (belt-and-suspenders) ────────────────────
+    // Even if history.replaceState works, Odoo embeds window.location.href
+    // inside the share platform URL params. This wrapper scans all params
+    // and rewrites any same-origin URL it finds.
+    var _origOpen = window.open;
+    window.open = function (url, target, features) {
+        var code = getCode();
+        if (code && url && typeof url === 'string') {
+            try {
+                var u = new URL(url);
+                var changed = false;
+                u.searchParams.forEach(function (val, key) {
+                    var next = val.replace(/https?:\/\/[^\s"<>]+/g, function (m) {
+                        try {
+                            // Only rewrite same-origin URLs
+                            var mu = new URL(m);
+                            if (mu.hostname !== window.location.hostname) return m;
+                            return toRefUrl(m, code);
+                        } catch (e) { return m; }
+                    });
+                    if (next !== val) { u.searchParams.set(key, next); changed = true; }
                 });
-            });
-        });
-        observer.observe(document.body, { childList: true, subtree: true });
-    }
+                if (changed) url = u.toString();
+            } catch (e) {}
+        }
+        return _origOpen.call(window, url, target, features);
+    };
 
-    function init() {
-        const refCode = getAffiliateCode();
-        if (!refCode) return;
-        const affiliateUrl = buildAffiliateUrl(refCode);
-        patchAll(affiliateUrl);
-        watchDOM(affiliateUrl);
-    }
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
-        init();
-    }
 })();

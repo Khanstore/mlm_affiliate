@@ -1,27 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!--
-        Inject the affiliate ref code as a hidden data attribute on every
-        product page so affiliate_share.js can read it and rewrite share URLs.
 
-        Odoo 18 COMPATIBILITY NOTE:
-        The website_sale.product template structure changes between versions.
-        Using expr="." with position="inside" appends to the template root —
-        the only XPath that is guaranteed to work in every Odoo version
-        regardless of internal structural changes.
-
-        The hidden div is invisible to users; JS reads data-ref-code from it.
-    -->
+    <!-- Inject hidden data-ref-code div into the product page.
+         JS reads data-ref-code to get the partner's referral code. -->
     <template id="product_mlm_affiliate_data"
               inherit_id="website_sale.product"
-              name="MLM Affiliate Share Injection">
+              name="MLM Affiliate Data Injection">
         <xpath expr="." position="inside">
             <t t-set="mlm_partner" t-value="request.env.user.partner_id.sudo()"/>
-            <t t-if="mlm_partner.referral_code">
+            <t t-if="not request.env.user._is_public() and mlm_partner.referral_code">
                 <div id="mlm_affiliate_data"
                      class="d-none"
                      t-att-data-ref-code="mlm_partner.referral_code"/>
             </t>
         </xpath>
     </template>
+
 </odoo>
