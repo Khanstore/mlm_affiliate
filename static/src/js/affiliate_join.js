@@ -102,9 +102,18 @@
                 }
 
                 if (data.is_affiliate && data.affiliate_status === 'approved') {
+                    var loginUrl = '/web/login?redirect=/my/affiliate';
+                    if (data.email) {
+                        loginUrl += '&login=' + encodeURIComponent(data.email);
+                    }
                     searchResult.innerHTML =
-                        '<div class="alert alert-success py-2 small mb-0">' +
-                        '🎉 <strong>' + data.name + '</strong> is already an approved affiliate!</div>';
+                        '<div class="alert alert-success py-2 mb-0">' +
+                        '<div class="d-flex align-items-center justify-content-between flex-wrap gap-2">' +
+                        '<span><i class="fa fa-check-circle me-1"></i> <strong>' + data.name + '</strong> is already an approved affiliate!</span>' +
+                        '<a href="' + loginUrl + '" class="btn btn-success btn-sm">' +
+                        '<i class="fa fa-sign-in me-1"></i>Sign in to Dashboard</a>' +
+                        '</div>' +
+                        '</div>';
                     return;
                 }
 

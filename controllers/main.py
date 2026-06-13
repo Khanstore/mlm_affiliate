@@ -14,13 +14,24 @@ class AffiliatePortal(CustomerPortal):
     def _prepare_home_portal_values(self, counters):
         values = super()._prepare_home_portal_values(counters)
         if 'affiliate_commission_count' in counters:
-            partner = request.env.user.partner_id
-            values['affiliate_commission_count'] = (
-                request.env['mlm.commission'].sudo().search_count(
+            partner = request.env.user.partner_id.sudo()
+            # Only expose the card for approved affiliates
+            if partner.is_affiliate and partner.affiliate_status == 'approved':
+                count = request.env['mlm.commission'].sudo().search_count(
                     [('partner_id', '=', partner.id), ('state', '!=', 'cancelled')]
                 )
-            )
+                # Return at least 1 so Odoo never hides the card due to zero count
+                values['affiliate_commission_count'] = max(count, 1)
+            else:
+                values['affiliate_commission_count'] = 0
         return values
+
+
+
+
+
+
+
 
     # ── Referral redirect ─────────────────────────────────────────────────────
     @http.route('/ref/<string:code>', type='http', auth='public', website=True, sitemap=False)
@@ -262,6 +273,13 @@ class AffiliatePortal(CustomerPortal):
                 type='http', auth='user', website=True)
     def affiliate_dashboard(self, **kwargs):
         partner = request.env.user.partner_id.sudo()
+
+        # Redirect non-affiliates to the join page
+        if not partner.is_affiliate:
+            return request.redirect('/affiliate/join')
+        # Pending approval — show waiting page
+        if partner.affiliate_status == 'pending':
+            return request.render('mlm_affiliate.affiliate_join_page', {'partner': partner})
 
         if not partner.referral_code:
             partner.action_generate_referral_code()

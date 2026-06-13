@@ -11,12 +11,16 @@
               customize_show="True"
               priority="50">
         <xpath expr="//div[hasclass('o_portal_docs')]" position="inside">
-            <t t-call="portal.portal_docs_entry">
-                <t t-set="title">Affiliate &amp; Earnings</t>
-                <t t-set="url">/my/affiliate</t>
-                <t t-set="placeholder_count">affiliate_commission_count</t>
-                <t t-set="count" t-value="affiliate_commission_count"/>
-                <t t-set="text">Referral link, commissions, wallet and downline.</t>
+            <t t-set="mlm_partner" t-value="request.env.user.partner_id.sudo()"/>
+            <t t-if="mlm_partner.is_affiliate and mlm_partner.affiliate_status == 'approved'">
+                <t t-call="portal.portal_docs_entry">
+                    <t t-set="title">Affiliate &amp; Earnings</t>
+                    <t t-set="url">/my/affiliate</t>
+                    <t t-set="placeholder_count">affiliate_commission_count</t>
+                    <t t-set="count" t-value="affiliate_commission_count"/>
+                    <t t-set="text">Referral link, commissions, wallet and downline.</t>
+                    <t t-set="icon">/mlm_affiliate/static/src/img/affiliate_icon.svg</t>
+                </t>
             </t>
         </xpath>
     </template>
