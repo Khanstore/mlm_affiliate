@@ -28,7 +28,9 @@ Features:
   level rate overrides, smart downline network button.
     """,
     'website': 'https://www.khan-store.com/mlm',
-    'author': 'Custom',
+    'price': 20.00,
+    'currency': 'USD',
+    'author': 'SM Ashraf',
     'depends': [
         'sale_management',
         'account',
